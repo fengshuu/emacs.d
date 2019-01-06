@@ -1,4 +1,6 @@
 *.elc
+# backup file
+*~
 
 # Custom
 /custom.el

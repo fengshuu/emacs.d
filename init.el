@@ -213,14 +213,6 @@
   (require 'spaceline-config)
   (spaceline-spacemacs-theme))
 
-;; Fonts
-(when (memq window-system '(mac ns))
-  (set-face-attribute 'default nil :font "Source Code Pro-13")
-
-  (setq face-font-rescale-alist `(("STkaiti" . ,(/ 16.0 13))))
-  (set-fontset-font t 'han      (font-spec :family "STkaiti"))
-  (set-fontset-font t 'cjk-misc (font-spec :family "STkaiti")))
-
 ;; Theme
 (use-package spacemacs-theme
   :ensure t
@@ -4823,11 +4815,6 @@ provides similiar function."
   :defer t
   :hook (csv-mode . hl-line-mode))
 
-(use-package po-mode
-  :about "Major mode for PO files"
-  :ensure t
-  :defer t)
-
 (use-package basic-mode
   :ensure t
   :defer t)
@@ -4969,4 +4956,92 @@ _r_: return
 (setq custom-safe-themes t)
 ;; (load custom-file :no-error :no-message)
 
-;;; init.el ends here
+
+;; add by fengshuu
+
+;; 关闭工具栏，tool-bar-mode 即为一个 Minor Mode
+(tool-bar-mode 0)
+
+;; 不显示菜单
+(menu-bar-mode 0)
+
+;; 关闭文件滑动控件
+(scroll-bar-mode 0)
+
+;; 显示行号
+(global-linum-mode 1)
+
+;; 关闭备份
+(setq make-backup-files nil)
+
+;; 设置字体
+(set-default-font "YaHei Consolas Hybrid-14")
+
+;; 更改光标的样式（不能生效，解决方案见第二集）
+;; (setq-default cursor-type 'box)
+
+;; 关闭启动帮助画面
+(setq inhibit-splash-screen 1)
+
+;;start 设置剪切板共享 
+(defun copy-from-osx () 
+(shell-command-to-string "pbpaste")) 
+(defun paste-to-osx (text &optional push) 
+(let ((process-connection-type nil)) 
+(let ((proc (start-process"pbcopy" "*Messages*" "pbcopy"))) 
+(process-send-string proc text) 
+(process-send-eof proc)))) 
+(setq interprogram-cut-function 'paste-to-osx) 
+(setq interprogram-paste-function 'copy-from-osx) 
+;;end 设置剪切板共享 
+
+;;设置默认读入文件编码
+(prefer-coding-system 'utf-8)
+;;设置写入文件编码
+(setq default-buffer-file-coding-system 'utf-8)
+
+;;防止页面滚动时跳动，
+;;scroll-margin 3 可以在靠近屏幕边沿3行时就开始滚动
+;;scroll-step 1 设置为每次翻滚一行，可以使页面更连续
+(setq scroll-step 1 scroll-margin 3 scroll-conservatively 10000)
+
+;; 当光标在行尾上下移动的时候，始终保持在行尾。
+(setq track-eol t)
+
+;; 启用时间显示设置，在minibuffer上面的那个杠上
+(display-time-mode t)
+
+;; 使用24小时制
+(setq display-time-24hr-format t)
+
+;; 缩进tab宽度为四个空格，同时设置c代码中语句首字母与括号对齐
+(setq default-tab-width 4)
+(setq-default indent-tabs-mode nil)
+(setq c-default-style "Linux")
+(setq c-basic-offset 4)
+
+;; -----绑定键------
+;; 改变Emacs要你回答yes的行为,按y或空格键表示yes，n表示no。 
+(fset 'yes-or-no-p 'y-or-n-p) 
+;;设置C->键作为窗口之间的切换，默认的是C-x-o,比较麻烦
+(global-set-key (kbd "C-o") 'other-window)
+
+;;;分屏
+;;屏幕大小
+(require 'windresize)
+(global-set-key (kbd "C-c m") 'windresize)
+
+;;可以使用 Ctrl-c ← （就是向左的箭头键）组合键，退回你的上一个窗口设置。）
+;;可以使用 Ctrl-c → （前进一个窗口设置。）
+(when (fboundp 'winner-mode)
+  (winner-mode) 
+  (windmove-default-keybindings)) 
+
+;;;windmove-mode
+(when (fboundp 'windmove-default-keybindings)
+      (windmove-default-keybindings)
+    (global-set-key (kbd "C-c d")  'windmove-left) 
+    (global-set-key (kbd "C-c n") 'windmove-right)
+    (global-set-key (kbd "C-c t")    'windmove-up)
+    (global-set-key (kbd "C-c h")  'windmove-down))
+;; init.el ends here
