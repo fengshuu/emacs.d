@@ -206,30 +206,36 @@
 ;; To restore
 ;; (setq-default mode-line-format (eval (car (get 'mode-line-format 'standard-value))))
 
-(use-package spaceline
-  :disabled
+;; myTheme
+(use-package apropospriate-theme
   :ensure t
-  :config
-  (require 'spaceline-config)
-  (spaceline-spacemacs-theme))
+  :config 
+  (load-theme 'apropospriate-light t))
 
-;; Theme
-(use-package spacemacs-theme
-  :ensure t
-  :no-require t                      ; Silence byte-compiling warnings
-  :defer t
-  :init (setq spacemacs-theme-comment-bg nil
-              spacemacs-theme-org-height nil))
+;; (use-package spaceline
+;;   :disabled
+;;   :ensure t
+;;   :config
+;;   (require 'spaceline-config)
+;;   (spaceline-spacemacs-theme))
 
-(use-package tomorrow-theme
-  :ensure color-theme-sanityinc-tomorrow
-  :defer t
-  :init (load-theme 'sanityinc-tomorrow-eighties 'no-comfirm))
+;; ;; Theme
+;; (use-package spacemacs-theme
+;;   :ensure t
+;;   :no-require t                      ; Silence byte-compiling warnings
+;;   :defer t
+;;   :init (setq spacemacs-theme-comment-bg nil
+;;               spacemacs-theme-org-height nil))
 
-(use-package tangotango-theme
-  :ensure t
-  :no-require t
-  :defer t)
+;; (use-package tomorrow-theme
+;;   :ensure color-theme-sanityinc-tomorrow
+;;   :defer t
+;;   :init (load-theme 'sanityinc-tomorrow-eighties 'no-comfirm))
+
+;; (use-package tangotango-theme
+;;   :ensure t
+;;   :no-require t
+;;   :defer t)
 
 ;; Don't translate quote in `message' and `format-message'
 (setq text-quoting-style 'grave)
@@ -750,7 +756,7 @@ One C-u, swap window, two C-u, `chunyang-window-click-swap'."
 
 ;; Disable tabs, but given them proper width
 (setq-default indent-tabs-mode nil
-              tab-width 8)
+              tab-width 4)
 
 (setq kill-ring-max 200                 ; More killed items
       ;; Save the contents of the clipboard to kill ring before killing
@@ -889,7 +895,6 @@ One C-u, swap window, two C-u, `chunyang-window-click-swap'."
   :commands mark-align-mode)
 
 (use-package multiple-cursors           ; Edit text with multiple cursors
-  :disabled t
   :ensure t
   :bind (("C-c o e"     . mc/mark-more-like-this-extended)
          ("C-c o n"     . mc/mark-next-like-this)
@@ -2693,8 +2698,8 @@ This should be add to `find-file-hook'."
 ;; Just by providing the following, Emacs can already send emails
 ;;
 ;; Password is provided in ~/.authinfo file (this file should be encrypted via gpg)
-(setq user-full-name       "Xu Chunyang"
-      user-mail-address    "mail@xuchunyang.me"
+(setq user-full-name       "fengshuhao"
+      user-mail-address    "274757565@qq.com"
       ;; This is required for ~/.authinfo.gpg but not ~/.authinfo
       smtpmail-smtp-user   user-mail-address
       smtpmail-smtp-server "smtp.yandex.com"
@@ -3288,7 +3293,7 @@ Note that this will OVERRIDE the existing EWW bookmarks."
   (setq term-buffer-maximum-size 10240)
 
   ;; Respect my own M-x
-  (bind-key "M-x" (lookup-key global-map [?\M-x]) term-raw-escape-map)
+  (bind-key "<>M-x" (lookup-key global-map [?\M-x]) term-raw-escape-map)
 
   ;; C-c C-j   term-line-mode
   ;; C-c C-k   term-char-mode
@@ -3581,8 +3586,8 @@ Adapt from `org-babel-remove-result'."
 
   (setq org-log-done 'time)
 
-  (setq org-directory "~/Notes"
-        org-agenda-files '("~/Notes"))
+  (setq org-directory "~/feng"
+        org-agenda-files '("~/feng/work.org"))
   (setq org-capture-templates
         '(("t" "Todo" entry (file "todo.org")
            "* TODO %i%?\n:PROPERTIES:\n:CREATED: %U\n:END:\n\n"
@@ -4545,12 +4550,12 @@ provides similiar function."
              chunyang-pinyin-occur))
 
 ;; macOS 下，使用官方 GUI Emacs 和系统自带的拼音输入法时，输入期间，在
-;; Emacs buffer 已出现字母会随着输入的进行而发生“抖动”，相关讨论：
+;; Emacs buffer 已出现字母会随着输入的进行而发生抖动"，相关讨论：
 ;; - https://emacs-china.org/t/mac-gui-emacs/186
 ;; - https://debbugs.gnu.org/cgi/bugreport.cgi?bug=+23412
 
 ;; 临时解决方法，有效但不清楚有没有副作用
-;; (setq redisplay-dont-pause nil)
+(setq redisplay-dont-pause nil)
 
 (use-package opencc
   :ensure t
@@ -4929,6 +4934,7 @@ _r_: return
     ("s" gud-step)
     ("c" gud-cont)
     ("r" gud-finish)
+    ("r" gud-finish)
     ;; Breakpoints
     ("b" gud-break)
     ("r" gud-remove)
@@ -4975,7 +4981,7 @@ _r_: return
 (setq make-backup-files nil)
 
 ;; 设置字体
-(set-default-font "YaHei Consolas Hybrid-14")
+;;(set-default-font "Monaco-12")
 
 ;; 更改光标的样式（不能生效，解决方案见第二集）
 ;; (setq-default cursor-type 'box)
@@ -4983,17 +4989,25 @@ _r_: return
 ;; 关闭启动帮助画面
 (setq inhibit-splash-screen 1)
 
-;;start 设置剪切板共享 
-(defun copy-from-osx () 
-(shell-command-to-string "pbpaste")) 
-(defun paste-to-osx (text &optional push) 
-(let ((process-connection-type nil)) 
-(let ((proc (start-process"pbcopy" "*Messages*" "pbcopy"))) 
-(process-send-string proc text) 
-(process-send-eof proc)))) 
-(setq interprogram-cut-function 'paste-to-osx) 
-(setq interprogram-paste-function 'copy-from-osx) 
-;;end 设置剪切板共享 
+;;;; 设置编辑环境
+;; 设置emacs 使用 utf-8
+(setq locale-coding-system 'utf-8)
+;; 设置键盘输入时的字符编码
+(set-keyboard-coding-system 'utf-8)
+;(set-selection-coding-system 'utf-8)
+;; 文件默认保存为 utf-8
+(set-buffer-file-coding-system 'utf-8)
+(set-default buffer-file-coding-system 'utf8)
+(set-default-coding-systems 'utf-8)
+;; 解决粘贴中文出现乱码的问题
+(set-clipboard-coding-system 'utf-8)
+;; 终端中文乱码
+(set-terminal-coding-system 'utf-8)
+(modify-coding-system-alist 'process "*" 'utf-8)
+(setq default-process-coding-system '(utf-8 . utf-8))
+;; 解决文件目录的中文名乱码
+(setq-default pathname-coding-system 'utf-8)
+(set-file-name-coding-system 'utf-8)
 
 ;;设置默认读入文件编码
 (prefer-coding-system 'utf-8)
@@ -5042,6 +5056,101 @@ _r_: return
       (windmove-default-keybindings)
     (global-set-key (kbd "C-c d")  'windmove-left) 
     (global-set-key (kbd "C-c n") 'windmove-right)
-    (global-set-key (kbd "C-c t")    'windmove-up)
+    ;; (global-set-key (kbd "C-c t")    'windmove-up)
     (global-set-key (kbd "C-c h")  'windmove-down))
 ;; init.el ends here
+
+;; markdown preview
+(setq markdown-command "pandoc")
+
+(global-set-key (kbd "M-x") 'helm-M-x)
+
+;; helm-projectile 配置
+(require 'helm-projectile)
+(projectile-global-mode)
+(setq projectile-completion-system'helm)
+(helm-projectile-on)
+;; 快捷键
+(global-set-key (kbd "C-c p h") 'helm-projectile)
+(global-set-key (kbd "C-c p p") 'helm-projectile-switch-project)
+
+;; 快速打开配置文件
+(defun open-init-file()
+  (interactive)
+  (find-file "~/.emacs.d/init.el"))
+
+;; 这一行代码，将函数 open-init-file 绑定到 <f2> 键上
+(global-set-key (kbd "<f12>") 'open-init-file)
+
+;; java 编译
+(require 'meghanada)
+(add-hook 'java-mode-hook
+          (lambda ()
+            ;; meghanada-mode on
+            (meghanada-mode t)
+            (flycheck-mode +1)
+            (setq c-basic-offset 2)
+            ;; use code format
+            (add-hook 'before-save-hook 'meghanada-code-beautify-before-save)))
+(cond
+   ((eq system-type 'windows-nt)
+    (setq meghanada-java-path (expand-file-name "bin/java.exe" (getenv "JAVA_HOME")))
+    (setq meghanada-maven-path "mvn.cmd"))
+   (t
+    (setq meghanada-java-path "java")
+    (setq meghanada-maven-path "mvn")))
+
+(global-set-key (kbd "C-c C-i") 'yas-insert-snippet)
+
+;; todo 归档
+(defun org-archive-done-tasks ()
+  (interactive)
+  (org-map-entries
+   (lambda ()
+     (org-archive-subtree)
+     (setq org-map-continue-from (outline-previous-heading)))
+   "/DONE" 'file)
+  (org-map-entries
+   (lambda ()
+     (org-archive-subtree)
+     (setq org-map-continue-from (outline-previous-heading)))
+   "/CANCELLED" 'file)
+)
+
+;; 英文补全
+(require 'company-english-helper)
+(global-set-key (kbd "C-c o a") 'toggle-company-english-helper)
+;;(setq company-english-helper-fuzz-search-p t)
+
+;; 在org模式下自动换行
+(add-hook 'org-mode-hook 'toggle-truncate-lines)
+
+;; 中英文等宽
+(set-face-attribute
+ 'default nil
+ :font (font-spec :name "-*-Monaco-normal-normal-normal-*-*-*-*-*-m-0-iso10646-1"
+                  :weight 'normal
+                  :slant 'normal
+                  :size 12.5))
+(dolist (charset '(kana han symbol cjk-misc bopomofo))
+  (set-fontset-font
+   (frame-parameter nil 'font)
+   charset
+   (font-spec :name "-*-Hiragino Sans GB-normal-normal-normal-*-*-*-*-*-p-0-iso10646-1"
+              :weight 'normal
+              :slant 'normal
+              :size 14.5)))
+;;(require 'cnfonts)
+;; 让 cnfonts 随着 Emacs 自动生效。
+;; (cnfonts-enable)
+;; 让 spacemacs mode-line 中的 Unicode 图标正确显示。
+;; (cnfonts-set-spacemacs-fallback-fonts)
+
+;;书签
+;;修改书签默认排序
+(defadvice bookmark-jump (after bookmark-jump activate)
+  (let ((latest (bookmark-get-bookmark bookmark)))
+    (setq bookmark-alist (delq latest bookmark-alist))
+    (add-to-list 'bookmark-alist latest)))
+
+(global-set-key (kbd "M-B") 'helm-bookmarks)
