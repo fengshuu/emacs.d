@@ -79,7 +79,8 @@
 ;; C-a." after startup
 (setq inhibit-startup-echo-area-message "xcy")
 
-(setq initial-major-mode 'fundamental-mode)
+;; Use `fundamental-mode' to reduce startup time
+(setq initial-major-mode 'lisp-interaction-mode)
 
 (use-package chunyang-scratch
   :preface
@@ -155,6 +156,15 @@
              chunyang-mac-switch-to-app
              chunyang-chrome-switch-tab))
 
+(use-package finda
+  :if *is-mac*
+  :homepage https://keminglabs.com/finda/
+  :about Open apps, files, Emacs buffers, Chrome tabs/history etc
+  :defer 2
+  :config
+  (require 'server)
+  (or (server-running-p) (server-mode)))
+
 
 ;;; User Interface
 (when (bound-and-true-p tool-bar-mode)
@@ -186,7 +196,7 @@
               (setf (frame-parameter nil 'alpha) new-alpha))
             t))))
 
-(column-number-mode)
+;; (column-number-mode)
 (size-indication-mode)
 
 (defconst chunyang-mode-line-format
@@ -329,22 +339,17 @@ See URL `https://www.alfredapp.com/help/workflows/inputs/script-filter/json/'."
                (erase-buffer)
                (insert prompt)
                (set-text-properties (point-min) (point-max) props)))))
-      (cond ((eq this-command 'shell-command-on-region)
-             (and (equal (minibuffer-prompt) "Shell command on region: ")
-                  current-prefix-arg
-                  (funcall prompt-fn "Shell command on region and replace: ")))
-            ((eq this-command 'shell-command)
-             (and (equal (minibuffer-prompt) "Shell command: ")
-                  current-prefix-arg
-                  (funcall prompt-fn "Shell command and insert output: ")))
-            ((eq this-command 'eshell-command)
-             (and (equal (minibuffer-prompt) "Emacs shell command: ")
-                  current-prefix-arg
-                  (funcall prompt-fn "Emacs shell command and insert output: ")))
-            ((eq this-command 'async-shell-command)
-             (and (equal (minibuffer-prompt) "Async shell command: ")
-                  current-prefix-arg
-                  (funcall prompt-fn "Async shell command and insert output: "))))))
+      (pcase (list this-command (minibuffer-prompt) (and current-prefix-arg t))
+        ('(shell-command-on-region "Shell command on region: " t)
+         (funcall prompt-fn "Shell command on region and replace: "))
+        ('(shell-command "Shell command: " t)
+         (funcall prompt-fn "Shell command and insert output: "))
+        ('(eshell-command "Emacs shell command: " t)
+         (funcall prompt-fn "Emacs shell command and insert output: "))
+        ('(async-shell-command "Async shell command: " t)
+         (funcall prompt-fn "Async shell command and insert output: "))
+        (`(pp-eval-expression "Eval: " ,_)
+         (funcall prompt-fn "Pp Eval: ")))))
 
   (define-minor-mode prompt-watcher-mode
     "Watch the minibuffer prompt and customize if asking."
@@ -367,6 +372,11 @@ See URL `https://www.alfredapp.com/help/workflows/inputs/script-filter/json/'."
 
 (use-package chunyang-edit-minibuffer
   :bind (:map minibuffer-local-map ("C-c '" . chunyang-edit-minibuffer)))
+
+(use-package which-key
+  :ensure t
+  :diminish which-key-mode
+  :config (which-key-mode))
 
 
 ;;; Ivy
@@ -398,6 +408,23 @@ See URL `https://www.alfredapp.com/help/workflows/inputs/script-filter/json/'."
   (global-set-key (kbd "C-h S") 'counsel-info-lookup-symbol)
   (global-set-key (kbd "C-c g") 'counsel-git)
   (define-key minibuffer-local-map (kbd "C-r") 'counsel-minibuffer-history))
+
+(use-package prescient
+  :ensure t
+  :homepage https://github.com/raxod502/prescient.el
+  :about Simple but effective sorting and filtering
+  :config (prescient-persist-mode))
+
+(use-package ivy-prescient
+  :ensure t
+  :after ivy
+  :config (ivy-prescient-mode))
+
+(use-package company-prescient
+  :disabled
+  :ensure t
+  :after company
+  :config (company-prescient-mode))
 
 
 ;;; Helm
@@ -462,6 +489,22 @@ See URL `https://www.alfredapp.com/help/workflows/inputs/script-filter/json/'."
   :diminish auto-revert-mode
   :config (global-auto-revert-mode))
 
+(use-package simple
+  :no-require t
+  :config
+  (define-advice goto-line (:before (&rest _) preview-line-number)
+    "Preview line number when prompting for line number.
+Idea from URL `https://www.reddit.com/r/emacs/comments/as83e2/weekly_tipstricketc_thread/egu2sve'."
+    (interactive
+     (lambda (spec)
+       (if (and (boundp 'display-line-numbers) ; `display-line-numbers' was added in Emacs 26.1
+                (not display-line-numbers))
+           (unwind-protect
+               (progn (display-line-numbers-mode)
+                      (advice-eval-interactive-spec spec))
+             (display-line-numbers-mode -1))
+         (advice-eval-interactive-spec spec))))))
+
 (use-package chunyang-simple
   :preface
   ;; 我已经用了用了 M-RET，结果 Org/Eww/Gnus 也用
@@ -495,6 +538,7 @@ See URL `https://www.alfredapp.com/help/workflows/inputs/script-filter/json/'."
   :commands (chunyang-window-click-swap
              chunyang-cycle-filename-format
              chunyang-display-number-as-char
+             chunyang-delete-region
              chunyang-count-top-level-expression))
 
 (use-package chunyang-misc
@@ -517,15 +561,16 @@ See URL `https://www.alfredapp.com/help/workflows/inputs/script-filter/json/'."
 
 (use-package chunyang-buffers
   :preface
-  (defun chunyang-kill-all-buffers ()
-    (interactive)
+  (defun chunyang-kill-all-buffers (&optional except-current-buffer)
+    (interactive "P")
     (let ((buffers-to-kill
            (seq-filter
             (lambda (buffer)
               (let ((name (buffer-name buffer)))
                 ;; Ignore uninteresting buffers
                 (and (not (string-prefix-p " " name))
-                     (not (member name '("*scratch*" "*Messages*"))))))
+                     (not (member name '("*scratch*" "*Messages*")))
+                     (not (and except-current-buffer (eq buffer (current-buffer)))))))
             (buffer-list))))
       (mapc #'kill-buffer buffers-to-kill)
       (delete-other-windows)))
@@ -551,6 +596,26 @@ See URL `https://www.alfredapp.com/help/workflows/inputs/script-filter/json/'."
 (use-package ibuffer
   :bind ("C-x C-b" . ibuffer)           ; was `list-buffers'
   :config
+  (define-ibuffer-column human-readable-size
+    (
+     :name "Size"
+     :inline t
+     :header-mouse-map ibuffer-size-header-map
+     :summarizer
+     (lambda (column-strings)
+       (cl-loop for s in column-strings
+                sum (get-text-property (1- (length s)) 'size s) into total
+                finally return (file-size-human-readable total))))
+    (let ((size (buffer-size)))
+      (propertize (file-size-human-readable size)
+                  'size size)))
+
+  (setq ibuffer-formats
+        '((mark " " (name 18 18 :left :elide)
+                " " (human-readable-size 6 -1 :right)
+                " " (mode 16 16 :left :elide) " " filename-and-process)
+          (mark " " (name 16 -1) " " filename)))
+
   ;; Since I used to M-o
   (unbind-key "M-o" ibuffer-mode-map))
 
@@ -1053,8 +1118,8 @@ Intended to be added to `isearch-mode-hook'."
   :config
   (when (version>= emacs-version "27")
     (setq isearch-lazy-count t)
-    (setq lazy-highlight-buffer t
-          lazy-highlight-cleanup nil)
+    ;; (setq lazy-highlight-buffer t
+    ;;       lazy-highlight-cleanup nil)
     (setq isearch-allow-scroll 'unlimited)))
 
 (use-package re-builder
@@ -1062,6 +1127,11 @@ Intended to be added to `isearch-mode-hook'."
   :config
   ;; Escape 的工作就交给 Emacs 了
   (setq reb-re-syntax 'string))
+
+(use-package xr
+  :about Convert string regexp to rx notation
+  :ensure t
+  :defer t)
 
 (use-package anzu                       ; Position/matches count for isearch
   :disabled t
@@ -1264,7 +1334,15 @@ Intended to be added to `isearch-mode-hook'."
     :defer t
     :init
     (setq ispell-program-name "aspell"
-          ispell-extra-args '("--sug-mode=ultra")))
+          ispell-extra-args
+          '("--sug-mode=fast"
+            ;; NOTE 我把 macOS 改成了中文语言，然后 Emacs:
+            ;;
+            ;; (getenv "LANG")
+            ;; ;; => "zh-Hans_US.UTF-8"
+            ;;
+            ;; 导致 Aspell 试图找 zh 语言的字典，遂失败
+            "--lang=en_US")))
   :bind ("C-c t s" . flyspell-mode)
   :config
   (unbind-key "C-."   flyspell-mode-map)
@@ -1348,17 +1426,41 @@ Intended to be added to `isearch-mode-hook'."
   :config
   (flycheck-package-setup)
   ;; Cause I don't use `package.el' anymore
-  (advice-add 'package-lint--check-packages-installable :around #'ignore))
+  ;; (advice-add 'package-lint--check-packages-installable :around #'ignore)
+  )
 
 (use-package elsa
-  :homepage https://github.com/emacs-elsa/Elsa
   :about Emacs Lisp Static Analyzer
+  :homepage https://github.com/emacs-elsa/Elsa
+  :load-path "~/src/Elsa"
   :ensure t
   :defer t)
+
+(use-package flycheck-elsa-without-cask
+  :after flycheck
+  :no-require t
+  :config
+  (flycheck-define-checker emacs-lisp-elsa-without-cask
+    "Run Elsa without Cask."
+    :command ("elsa"
+              (eval (flycheck-prepend-with-option "-L" load-path))
+              source)
+    :error-filter flycheck-increment-error-columns
+    :error-patterns
+    ((error line-start (file-name) ":"  line ":" column ":error:" (message))
+     (warning line-start (file-name) ":" line ":" column ":warning:" (message))
+     (info line-start (file-name) ":" line ":" column ":notice:" (message)))
+    :modes (emacs-lisp-mode))
+
+  (setf (car (flycheck-checker-get 'emacs-lisp-elsa-without-cask 'command))
+        (expand-file-name "bin/elsa" (file-name-directory (locate-library "elsa"))))
+
+  (add-to-list 'flycheck-checkers 'emacs-lisp-elsa-without-cask))
 
 (use-package flycheck-elsa
   :ensure t
-  :defer t)
+  :after flycheck
+  :config (flycheck-elsa-setup))
 
 
 ;;; Markup languages
@@ -1444,6 +1546,43 @@ unlike `markdown-preview'."
   :config (setq deft-markdown-mode-title-level 1))
 
 
+;;; PDF
+
+(use-package pdf-tools
+  :homepage https://github.com/politza/pdf-tools
+  :ensure t
+  ;; FIXME I do not know how to setup pdf-tools
+  :init
+  (pdf-loader-install)
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;    恢复页面                                           ;;
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  
+  ;; 持久化？
+  (defvar chunyang-pdf-alist nil
+    "List of (FILENAME . PAGE).")
+
+  (defun chunyang-pdf-view-mode-save-page ()
+    (when (and (eq major-mode 'pdf-view-mode)
+               buffer-file-name)
+      (setq chunyang-pdf-alist
+            (delq (assoc buffer-file-name chunyang-pdf-alist)
+                  chunyang-pdf-alist))
+      (push (cons buffer-file-name (pdf-view-current-page))
+            chunyang-pdf-alist)))
+
+  (add-hook 'kill-buffer-hook #'chunyang-pdf-view-mode-save-page 'append)
+
+  (defun chunyang-pdf-view-mode-open-page ()
+    (when-let ((page (assoc-default buffer-file-name chunyang-pdf-alist)))
+      (pdf-view-goto-page page)))
+
+  (add-hook 'pdf-view-mode-hook #'chunyang-pdf-view-mode-open-page 'append)
+
+  "the ugly placement (for better line-base diff)")
+
+
 ;;; Programming utilities
 
 ;; `glasses-mode' -- 把 areYouReady 显示成 are_You_Ready
@@ -1476,6 +1615,23 @@ unlike `markdown-preview'."
   :bind (("C-x c" . compile))
   :preface
 
+  (defun chunyang-compile-command ()
+    "Guess a `compile-command' for the current buffer."
+    (when-let ((file (and buffer-file-name (file-name-nondirectory buffer-file-name)))
+               (command (pcase major-mode
+                          ('c-mode "cc")
+                          ('elixir-mode "elixir")
+                          ((guard (derived-mode-p 'emacs-lisp-mode))
+                           "emacs -Q --batch -f batch-byte-compile"))))
+      (format "%s %s" command (shell-quote-argument file))))
+
+  (defun chunyang-compile-command-set ()
+    (pcase (chunyang-compile-command)
+      ((and command (guard command))
+       (setq-local compile-command command))))
+
+  (add-hook 'prog-mode-hook #'chunyang-compile-command-set)
+
   ;; (defvar chunyang-compilation-root nil)
   ;; (defun chunyang-compilation-setup ()
   ;;   (setq chunyang-compilation-root (chunyang-project-root)))
@@ -1503,40 +1659,6 @@ unlike `markdown-preview'."
   ;; TODO: I have some font issue, so disalbe it for now
   ;; :init (add-hook 'emacs-lisp-mode-hook #'prettify-symbols-mode)
   :init (global-prettify-symbols-mode))
-
-(use-package highlight-symbol
-  :ensure t
-  :init
-  (define-key prog-mode-map (kbd "M-n") #'highlight-symbol-next)
-  (define-key prog-mode-map (kbd "M-p") #'highlight-symbol-prev)
-  ;; http://www.wilfred.me.uk/.emacs.d/init.html#orgcca7dfa
-  (defun highlight-symbol-first ()
-    "Jump to the first location of symbol at point."
-    (interactive)
-    (push-mark)
-    (eval
-     `(progn
-        (goto-char (point-min))
-        (let ((case-fold-search nil))
-          (search-forward-regexp
-           (rx symbol-start ,(thing-at-point 'symbol) symbol-end)
-           nil t))
-        (beginning-of-thing 'symbol))))
-
-  (define-key prog-mode-map (kbd "M-P") #'highlight-symbol-first)
-  (defun highlight-symbol-last ()
-    "Jump to the last location of symbol at point."
-    (interactive)
-    (push-mark)
-    (eval
-     `(progn
-        (goto-char (point-max))
-        (let ((case-fold-search nil))
-          (search-backward-regexp
-           (rx symbol-start ,(thing-at-point 'symbol) symbol-end)
-           nil t)))))
-
-  (global-set-key (kbd "M-N") 'highlight-symbol-last))
 
 (use-package nocomments-mode            ; Hide Comments
   :ensure t
@@ -1779,11 +1901,54 @@ PACKAGE should not be a built-in package."
             (cadr (assq package package-alist)))))
       (el-search-directory pattern pkgdir t)))
 
+  (defun chunyang-el-search-elpa (pattern)
+    (interactive
+     (let* ((default (format "%s" (chunyang-el-search-symbol-or-sexp-at-point)))
+            (input
+             (el-search--read-pattern
+              (format
+               "El-search %s for pattern: "
+               (abbreviate-file-name package-user-dir))
+              default))
+            (pattern (read input)))
+       (list pattern)))
+    (el-search-directory pattern package-user-dir t))
+
   :init
   ;; Reduce startup time. keys won't work untill an elisp file is opened.
+  ;;
+  ;; UPDATE: Well, it dosen't really matter, since `elisp-mode' is always loaded
+  ;; even in Emacs -Q.
   (with-eval-after-load 'elisp-mode
     (el-search-install-shift-bindings))
   :config
+  (defun el-search-helm ()
+    (interactive)
+    (el-search--message-no-log "Preparing helm...")
+    (unless el-search--current-search
+      (user-error "No active search"))
+    (let* ((search el-search--current-search)
+           (stream-of-matches (funcall (el-search-object-get-matches search)))
+           (candidates (mapcar
+                        (pcase-lambda ((and match `(,buffer ,match-beg ,file)))
+                          (with-current-buffer buffer
+                            (cons (buffer-substring-no-properties
+                                   match-beg (el-search--end-of-sexp match-beg))
+                                  match)))
+                        (seq-into stream-of-matches 'list))))
+      (require 'helm)
+      (helm :sources
+            (helm-build-sync-source
+                (el-search--get-search-description-string el-search--current-search)
+              :candidates candidates
+              :multiline t
+              :action (pcase-lambda (`(,buffer ,match-beg ,file))
+                        (if file
+                            (find-file file)
+                          (switch-to-buffer buffer))
+                        (goto-char match-beg)))
+            :buffer "*helm el-search*")))
+
   ;; XXX: Better idea for the buffer name, see C-j C-S-j
   ;; `el-search-jump-to-search-head'
   (defun chunyang-el-search-change-occur-buffer-name ()
@@ -1860,7 +2025,26 @@ PACKAGE should not be a built-in package."
              chunyang-display-window-mode
              chunyang-toggle-setq-form
              chunyang-insert-command
-             chunyang-insert-key))
+             chunyang-insert-key)
+  :preface
+  (defun threadify (exp)
+    (cl-labels ((aux (exp acc)
+                     (pcase exp
+                       (`(,func ,arg1)
+                        (aux arg1 (cons func acc)))
+                       (`(,func ,arg1 . ,args)
+                        (aux arg1 (cons (cons func args) acc)))
+                       (X `(-> ,X ,@acc)))))
+      (aux exp ())))
+
+  (defun threadify-sexp-at-point ()
+    (interactive)
+    (unless (sexp-at-point)
+      (user-error "No sexp at point"))
+    (pcase-let ((`(,beg . ,end) (bounds-of-thing-at-point 'sexp)))
+      (let ((new (pp-to-string (threadify (sexp-at-point)))))
+        (delete-region beg end)
+        (insert new)))))
 
 (use-package chunyang-package
   :commands describe-package--add-melpa-link
@@ -1921,6 +2105,19 @@ PACKAGE should not be a built-in package."
 
 (use-package debug
   :defer t
+  :preface
+  ;; (DEBUG emacs-version (+ 1 2 3))
+  (defmacro DEBUG (&rest exprs)
+    `(message
+      ,(concat "[DEBUG] "
+               (mapconcat
+                (lambda (e)
+                  (concat
+                   (replace-regexp-in-string
+                    "%" "%%" (prin1-to-string e))
+                   " = %S"))
+                exprs ", "))
+      ,@exprs))  
   :config
   (defhydra hydra-debugger-menu ()
     "Debug"
@@ -1934,6 +2131,11 @@ PACKAGE should not be a built-in package."
   :info (info "(elisp) Edebug")
   :defer t
   :config
+
+  (define-advice edebug-eval-expression (:before (_expr) better-interactive-form)
+    "Fix the original interactive form."
+    (interactive (list (read--expression "Edebug Eval: "))))  
+  
   ;; Don't pause after every break (Added in Emacs 26.1)
   (setq edebug-sit-on-break nil)
   ;; Don't restore window configuration
@@ -1989,6 +2191,21 @@ PACKAGE should not be a built-in package."
 (use-package other-emacs-eval
   :ensure t
   :defer t)
+
+(use-package cask
+  :about Project management for Emacs package development
+  :homepage http://github.com/cask/cask
+  :disabled t)
+
+(use-package cask-mode
+  :about Major mode for editing Cask files
+  :ensure t
+  :defer t)
+
+(use-package emake
+  :about Test Elisp without the hoops
+  :homepage https://github.com/vermiculus/emake.el
+  :disabled t)
 
 
 ;;; Help & Info
@@ -2250,8 +2467,7 @@ PACKAGE should not be a built-in package."
   :ensure t
   :homepage https://github.com/magit/magit
   :info (info "(magit) Top")
-  :bind (("C-x g"   . magit-status)
-         ("C-x M-g" . magit-dispatch-popup))
+  :bind (("C-x g"   . magit-status))
   :config
   (setq-default magit-diff-refine-hunk t)
   (setq magit-save-repository-buffers 'dontask)
@@ -2260,6 +2476,25 @@ PACKAGE should not be a built-in package."
         '(("~/.emacs.d"                . 0)
           ("~/.emacs.d/straight/repos" . 1)
           ("~/src"                     . 1))))
+
+
+(use-package ghub
+  :ensure t
+  :defer t
+  :config
+  ;; FIXME https://github.com/magit/ghub/issues/81
+  (setq ghub-use-workaround-for-emacs-bug nil)
+  :notes
+  ;; Examples
+  (ghub-get "/")
+  (ghub-get "/user")
+  (ghub-get "/user/starred"))
+
+(use-package forge
+  :homepage https://github.com/magit/forge
+  :about Work with Git forges from the comfort of Magit
+  :ensure t
+  :defer t)
 
 (use-package magithub
   :disabled
@@ -2390,6 +2625,10 @@ PACKAGE should not be a built-in package."
 
 (use-package comint
   :defer t
+  :init
+  (define-advice comint-run (:before (_program) fix-interactive-form)
+    "Fix the original interactive form."
+    (interactive (list (read-shell-command "Run program: "))))
   :config
   ;; Disable auto scroll on RET (like Eshell)
   (setq comint-scroll-show-maximum-output nil))
@@ -2473,18 +2712,6 @@ PACKAGE should not be a built-in package."
   (defun open-emacs-window ()
     (select-frame-set-input-focus (selected-frame)))
 
-  ;; Hmm, 'C-c C-c' is easier than 'C-x #' to type
-  (defun chunyang-server-setup ()
-    (unless (key-binding [?\C-c ?\C-c])
-      (local-set-key [?\C-c ?\C-c] #'server-edit)))
-
-  (defun chunyang-server-cleanup ()
-    (when (eq (key-binding [?\C-c ?\C-c]) 'server-edit)
-      (bind-key "C-c C-c" nil (current-local-map))))
-
-  (add-hook 'server-switch-hook #'chunyang-server-setup)
-  (add-hook 'server-done-hook #'chunyang-server-cleanup)
-
   (when *is-mac*
     ;; Re-focus iTerm
     (defun chunyang-activate-iterm ()
@@ -2510,13 +2737,28 @@ PACKAGE should not be a built-in package."
   :defer t)
 
 (use-package github-stars
+  :load-path "~/src/github-stars.el"
   :ensure t
   :defer t)
 
 (use-package chunyang-github
   :ensure ghub                          ; Dependency
   :commands (helm-chunyang-github-stars
-             helm-chunyang-github-repos))
+             helm-chunyang-github-repos)
+  :preface
+  (defun chunyang-github-create ()
+    "Create a new repository on GitHub and add a git remote for it."
+    (interactive)
+    (require 'ghub)
+    (let* ((git-root (or (locate-dominating-file default-directory ".git")
+                         (user-error "Not a git repository")))
+           (basename (file-name-nondirectory (directory-file-name git-root)))
+           (params `((name . ,basename)
+                     (private . ,(y-or-n-p "Private GitHub Repository?"))))
+           (response (ghub-post "/user/repos" params)))
+      (call-process-shell-command
+       (concat "git remote add origin " (alist-get 'clone_url response)))
+      (message "%s" (alist-get 'html_url response)))))
 
 (use-package git-link
   :homepage https://github.com/sshaw/git-link
@@ -2635,6 +2877,9 @@ This should be add to `find-file-hook'."
 
   (bind-key "C-c C-c" #'gif-screencast-stop gif-screencast-mode-map))
 
+(use-package haikunator
+  :commands haikuantor-insert)
+
 
 ;;; Documentation
 
@@ -2695,6 +2940,11 @@ This should be add to `find-file-hook'."
     :after rcirc
     :ensure t))
 
+(use-package erc
+  :defer t
+  :config
+  (setq erc-track-exclude-types '("JOIN" "NICK" "PART" "QUIT")))
+
 ;; Just by providing the following, Emacs can already send emails
 ;;
 ;; Password is provided in ~/.authinfo file (this file should be encrypted via gpg)
@@ -2702,7 +2952,7 @@ This should be add to `find-file-hook'."
       user-mail-address    "274757565@qq.com"
       ;; This is required for ~/.authinfo.gpg but not ~/.authinfo
       smtpmail-smtp-user   user-mail-address
-      smtpmail-smtp-server "smtp.yandex.com"
+      smtpmail-smtp-server "smtp.fastmail.com"
       smtpmail-smtp-service 465
       smtpmail-stream-type 'ssl
       send-mail-function   'smtpmail-send-it)
@@ -2731,60 +2981,7 @@ This should be add to `find-file-hook'."
 
 (use-package gnus
   :defer t
-  :config
-  (setq gnus-select-method
-        '(nnimap "mail"
-                 (nnimap-address "imap.yandex.com")
-                 (nnimap-server-port 993)
-                 (nnimap-stream ssl)))
-
-  (setq gnus-message-archive-group "nnimap:Sent"
-        gnus-gcc-mark-as-read t)
-
-  (setq gnus-use-cache t)
-  (setq gnus-cache-enter-articles '(ticked dormant))
-  (setq gnus-cache-remove-articles nil)
-  (setq gnus-keep-backlog nil)
-
-  (with-eval-after-load 'gnus-agent
-    (defun chunyang-gnus-article-old-p ()
-      "Return t if an article is old."
-      (< (time-to-days (date-to-time (mail-header-date gnus-headers)))
-         (- (time-to-days nil) 2)))
-
-    (setq gnus-category-predicate-alist
-          (append gnus-category-predicate-alist
-                  '((old . chunyang-gnus-article-old-p)))))
-
-  (setq gnus-summary-line-format "%U%R%z %(%&user-date;  %-15,15f  %B %s%)\n"
-        gnus-user-date-format-alist '((t . "%Y-%m-%d %H:%M"))
-        gnus-group-line-format "%M%S%p%P%5y:%B %G\n")
-
-  (setq gnus-sum-thread-tree-false-root ""
-        gnus-sum-thread-tree-indent " "
-        gnus-sum-thread-tree-leaf-with-other "├► "
-        gnus-sum-thread-tree-root ""
-        gnus-sum-thread-tree-single-leaf "╰► "
-        gnus-sum-thread-tree-vertical "│")
-
-  (setq gnus-thread-sort-functions '(gnus-thread-sort-by-most-recent-date))
-  (setq gnus-thread-hide-subtree t)
-  (setq gnus-summary-display-arrow nil)
-  (setq gnus-auto-select-first nil)
-
-  (with-eval-after-load 'gnus-art
-    (setq gnus-visible-headers
-          (cons "^User-Agent:"
-                (split-string (car (get 'gnus-visible-headers 'standard-value))
-                              (regexp-quote "\\|")))))
-  (setq gnus-treat-display-smileys nil)
-
-  ;; XXX I don't understand what "Scoring" means in Gnus
-  (setq gnus-use-scoring nil)
-
-  ;; XXX To avoid a byte-compile warnning, should figure out the
-  ;; course or report a bug
-  (setq gnus-use-byte-compile nil))
+  :config (setq gnus-select-method '(nnimap "imap.fastmail.com")))
 
 (use-package notmuch
   :load-path "~/src/notmuch/emacs/"
@@ -2815,20 +3012,8 @@ proxychains4 mbsync --verbose --all && notmuch new&")
   :defer t)
 
 (use-package mu4e
-  :load-path "/usr/local/share/emacs/site-lisp/mu/mu4e/"
   :commands mu4e
-  :defer t
   :config
-  (setq mu4e-maildir       "~/Maildir"
-        mu4e-sent-folder   "/Sent"
-        mu4e-drafts-folder "/Drafts"
-        mu4e-trash-folder  "/Trash"
-        mu4e-refile-folder "/Archive")
-
-  (setq mu4e-user-mailing-lists
-        '(("racket-users.googlegroups.com" . "Racket")
-          ("chicken-users.nongnu.org"      . "Chicken")))
-
   (add-to-list 'mu4e-view-actions
                '("open in web browser" .
                  chunyang-mu4e-action-open-html-in-browser))
@@ -2837,7 +3022,7 @@ proxychains4 mbsync --verbose --all && notmuch new&")
                 (tmpfile (make-temp-file "mure-" nil ".html" html)))
       (call-process "open" nil nil nil tmpfile)))
 
-  (setq mu4e-get-mail-command "proxychains4 mbsync --verbose --all"))
+  (setq mu4e-get-mail-command "offlineimap"))
 
 (use-package chunyang-mail
   :commands chunyang-browse-gnu-message)
@@ -2898,6 +3083,12 @@ proxychains4 mbsync --verbose --all && notmuch new&")
   :disabled
   :ensure t
   :config (elfeed-goodies/setup))
+
+(use-package pocket-reader
+  :homepage https://github.com/alphapapa/pocket-reader.el
+  :about Client for https://getpocket.com
+  :ensure t
+  :defer t)
 
 (use-package url-cookie
   :defer t
@@ -3064,8 +3255,7 @@ Note that this will OVERRIDE the existing EWW bookmarks."
 (use-package shr
   :defer t
   :config
-  (setq shr-use-fonts nil
-        shr-use-colors nil)
+  (setq shr-use-fonts nil)
   (define-advice shr-tag-blockquote (:around (old-fun &rest args) bug-32277)
     "Work-around for bug#32277."
     (cl-letf (((symbol-function 'shr-mark-fill) #'ignore))
@@ -3775,6 +3965,7 @@ Adapt from `org-babel-remove-result'."
 
 (use-package grab-mac-link
   :if *is-mac*
+  :load-path "~/src/grab-mac-link"
   :ensure t
   :commands (grab-mac-link grab-mac-link-dwim)
   :config (setq grab-mac-link-dwim-favourite-app 'chrome))
@@ -3833,18 +4024,6 @@ Adapt from `org-babel-remove-result'."
     (abbrev-mode -1))
 
   (add-hook 'c-mode-common-hook #'chunyang-c-mode-common-setup)
-
-  (defun chunyang-c-mode-setup ()
-    (when buffer-file-name
-      (unless (file-exists-p "Makefile")
-        (setq-local compile-command
-                    (let ((fn (file-name-nondirectory buffer-file-name)))
-                      ;; https://gcc.gnu.org/onlinedocs/gcc-4.8.4/gcc/Warning-Options.html
-                      (format "cc -std=c99 -Wall -Wpedantic %s -o %s"
-                              (shell-quote-argument fn)
-                              (shell-quote-argument (file-name-sans-extension fn)))))))
-    (bind-key "C-c C-c" #'recompile c-mode-map))
-  (add-hook 'c-mode-hook #'chunyang-c-mode-setup)
 
   (defun chunyang-cpp-lookup ()
     "Lookup C function/macro/etc prototype via Preprocessing."
@@ -4367,6 +4546,58 @@ provides similiar function."
 (use-package web-server
   :homepage https://github.com/eschulte/emacs-web-server
   :ensure t
+  :preface
+  (defun simple-http-server (root-dir)
+    "简单的文件 HTTP 服务器，效果类似于 python -m http.server 8888."
+    (interactive (list (expand-file-name default-directory)))
+    (ws-start
+     `(lambda (request)
+        (with-slots ((proc process) headers) request
+          (let* ((path (alist-get :GET headers))
+                 (path (concat ,root-dir path)))
+            (cond ((file-directory-p path)
+                   (ws-response-header proc 200 (cons "Content-type" "text/html"))
+                   (process-send-string
+                    proc
+                    (mapconcat
+                     (lambda (f)
+                       (when (file-directory-p f)
+                         (setq f (concat f "/")))
+                       (format "<li><a href=%s>%s</li>"
+                               (url-encode-url f) (url-encode-url f)))
+                     (directory-files path)
+                     "\n")))
+                  ((file-regular-p path)
+                   (ws-send-file proc path))
+                  (t
+                   (ws-send-404 proc)))
+            )))
+     8888)
+    (browse-url "http://localhost:8888/"))
+  :defer t)
+
+
+;;; Elixir
+
+(use-package elixir-mode
+  :ensure t
+  :homepage https://github.com/elixir-lang/emacs-elixir
+  :defer t
+  :config
+  (require 'comint)
+  (define-derived-mode inferior-elixir-mode comint-mode "Inferior Elixir"
+    "Major mode for Elixir inferior process."
+    (setq comint-prompt-regexp (rx bol (or "iex" "...") "(" (1+ num) ") ")))
+
+  (defun run-elixir ()
+    (interactive)
+    (with-current-buffer (make-comint-in-buffer "Elixir" "*Elixir*" "iex" nil)
+      (inferior-elixir-mode)
+      (display-buffer (current-buffer)))))
+
+(use-package alchemist
+  :homepage https://github.com/tonini/alchemist.el
+  :ensure t
   :defer t)
 
 
@@ -4414,28 +4645,25 @@ provides similiar function."
   :defer t
   :preface
   (defun chunyang-python-mode-setup ()
-    (setq indent-tabs-mode nil)
-    (setq fill-column 79))
-  :config
-  ;; https://docs.python.org/3/tutorial/controlflow.html#intermezzo-coding-style
-  ;; * 缩进
-  (setq python-indent-offset 4
-        python-indent-guess-indent-offset nil)
-  (setq python-shell-completion-native-enable nil)
-  ;; Jupyter
-  (setq python-shell-interpreter "jupyter"
-        python-shell-interpreter-args "console --simple-prompt")
-  ;; IPython
-  (setq python-shell-interpreter "ipython"
-        python-shell-interpreter-args "--simple-prompt -i")
-  ;; Python
-  (setq python-shell-interpreter "python"
-        python-shell-interpreter-args "-i")
+    (eldoc-mode -1)
+    (kill-local-variable 'completion-at-point-functions))
 
-  ;; Company
-  (add-hook 'inferior-python-mode-hook #'company-mode)
-  ;; Elpy
-  (bind-key "C-h ." #'elpy-doc inferior-python-mode-map))
+  (defun chunyang-inferior-python-mode-setup ()
+    (setq-local comint-process-echoes t)
+    (kill-local-variable' completion-at-point-functions))
+  :config
+  (add-hook 'python-mode-hook #'chunyang-python-mode-setup)
+  (add-hook 'inferior-python-mode-hook #'chunyang-inferior-python-mode-setup)
+
+  (setq python-indent-guess-indent-offset nil)
+
+  (setq python-shell-interpreter "python3"
+        python-shell-completion-native-enable nil
+        python-shell-font-lock-enable nil))
+
+(use-package chunyang-python
+  :commands (chunyang-jedi
+             chunyang-python-comment-box))
 
 (use-package elpy
   :disabled       ; too many dependencies (find-file-in-project ->
@@ -4458,9 +4686,7 @@ provides similiar function."
 (use-package pydoc
   :ensure t
   :commands pydoc
-  :init
-  ;; FIXME Because fish isn't compatible with posix shell
-  (setq shell-file-name "/bin/sh"))
+  :config (setq pydoc-command "python3 -m pydoc"))
 
 (use-package helm-pydoc
   :ensure t
@@ -4498,6 +4724,12 @@ provides similiar function."
   :after lua-mode
   :config
   (add-to-list 'company-backends 'company-lua))
+
+
+;;; Janet <https://janet-lang.org/>
+
+(use-package janet
+  :commands run-janet)
 
 
 ;;; Misc
@@ -4710,6 +4942,13 @@ provides similiar function."
 
 (add-hook 'emacs-startup-hook #'chunyang-happy-birthday)
 
+(when (string= "03-23" (format-time-string "%m-%d"))
+  (run-with-idle-timer
+   1 nil
+   (lambda ()
+     (let (cursor-type)
+       (animate-birthday-present user-full-name)))))
+
 
 ;;; Utilities
 
@@ -4755,96 +4994,120 @@ provides similiar function."
 (use-package hexl
   :about (info "(emacs) Editing Binary Files")
   :notes
-  - od
-  - hexdump
-  - xxd
-  :commands (hexl-find-file hexl-mode))
+      - od
+      - hexdump
+      - xxd
+      :commands (hexl-find-file hexl-mode))
 
-(use-package nhexl-mode
-  :ensure t
-  :notes "Unlike `hexl-mode', this is a minor mode"
-  :defer t)
+    (use-package nhexl-mode
+      :ensure t
+      :notes "Unlike `hexl-mode', this is a minor mode"
+      :defer t)
 
-(use-package el2markdown
-  :about Convert Emacs Lisp Commentry section into Markdown
-  :ensure t
-  :defer t)
+    (use-package el2markdown
+      :about Convert Emacs Lisp Commentry section into Markdown
+      :ensure t
+      :defer t)
 
-(use-package ip2region
-  :about "IP 地址定位"
-  :if module-file-suffix
-  :load-path "~/src/emacs-ip2region"
-  :commands ip2region)
+    (use-package ip2region
+      :about "IP 地址定位"
+      :if module-file-suffix
+      :load-path "~/src/emacs-ip2region"
+      :commands ip2region)
 
-(use-package cmark
-  :about "Markdown parser"
-  :if module-file-suffix
-  :load-path "~/src/emacs-cmark"
-  :commands cmark-markdown-to-html)
+    (use-package cmark
+      :about "Markdown parser"
+      :if module-file-suffix
+      :load-path "~/src/emacs-cmark"
+      :commands cmark-markdown-to-html)
 
-(use-package epkg
-  :about "Browse the Emacsmirror package database"
-  :info (info "(epkg) Top")
-  :notes M-x epkg-describe-package is very impressive
-  :preface
-  (autoload 'epkg-read-package "epkg")
-  (defun chunyang-use-package (package)
-    (interactive
-     (list
-      (epkg-read-package
-       "Insert use-pacakge form for package: ")))
-    (pp
-     `(use-package ,(intern package)
-        :homepage ,(oref (epkg package) homepage)
-        :summary ,(oref (epkg package) summary))
-     (current-buffer)))
-  :ensure t
-  :defer t)
+    (use-package epkg
+      :about "Browse the Emacsmirror package database"
+      :info (info "(epkg) Top")
+      :notes M-x epkg-describe-package is very impressive
+      :preface
+      (autoload 'epkg-read-package "epkg")
+      (defun chunyang-use-package (package)
+        (interactive
+         (list
+          (epkg-read-package
+           "Insert use-pacakge form for package: ")))
+        (pp
+         `(use-package ,(intern package)
+            :homepage ,(oref (epkg package) homepage)
+            :summary ,(oref (epkg package) summary))
+         (current-buffer)))
+      :ensure t
+      :defer t)
 
-(use-package esup
-  :about "the Emacs StartUp Profiler"
-  :ensure t
-  :defer t)
+    (use-package esup
+      :about "the Emacs StartUp Profiler"
+      :ensure t
+      :defer t)
 
-(use-package lsp-mode
-  :disabled t
-  :ensure t
-  :about "Minor mode for Language Server Protocol"
-  :homepage https://github.com/emacs-lsp/lsp-mode
-  :notes
-  - https://github.com/Microsoft/language-server-protocol/
-  - http://langserver.org/
-  :defer t
-  :config
-  ;; XXX The face `lsp-face-highlight-textual' (background yellow) is ugly
-  (setq lsp-highlight-symbol-at-point nil))
+    (use-package lsp-mode
+      :disabled t
+      :ensure t
+      :about "Minor mode for Language Server Protocol"
+      :homepage https://github.com/emacs-lsp/lsp-mode
+      :notes
+      - https://github.com/Microsoft/language-server-protocol/
+      - http://langserver.org/
+      :defer t
+      :config
+      ;; XXX The face `lsp-face-highlight-textual' (background yellow) is ugly
+      (setq lsp-highlight-symbol-at-point nil))
 
-(use-package eglot
-  :about A client for Language Server Protocol servers
-  :homepage https://github.com/joaotavora/eglot
-  :ensure t
-  :commands eglot
-  :defer t)
+    (use-package eglot
+      :about A client for Language Server Protocol servers
+      :homepage https://github.com/joaotavora/eglot
+      :ensure t
+      :commands eglot
+      :defer t
+      :config
+      ;; * Elixir
+      ;; https://elixirforum.com/t/emacs-elixir-setup-configuration-wiki/19196
+      (add-to-list
+       'eglot-server-programs
+       '(elixir-mode "~/src/elixir-ls/release/language_server.sh"))
 
-(use-package cquery
-  :disabled "Just give it a try"
-  :homepage https://github.com/jacobdufault/cquery
-  :load-path "~/src/cquery/emacs/"
-  :commands lsp-cquery-enable
-  :init
-  (add-hook 'c-mode-hook #'lsp-cquery-enable)
-  (add-hook 'c++-mode-hook #'lsp-cquery-enable)
-  (add-hook 'objc-mode-hook #'lsp-cquery-enable))
+      (defun chunyang-elixir-current-project (dir)
+        "Return the current project as a cons cell usable by project.el."
+        (let ((project-dir (locate-dominating-file dir "mix.exs")))
+          (if project-dir
+              (cons 'elixir project-dir)
+            nil)))
 
-(use-package transmission
-  :ensure t
-  :defer t)
+      (add-hook 'project-find-functions #'chunyang-elixir-current-project)
 
-(use-package csv-mode
-  :about "Major mode for csv files"
-  :ensure t
-  :defer t
-  :hook (csv-mode . hl-line-mode))
+      (cl-defmethod project-roots ((project (head elixir)))
+        (list (cdr project))))
+
+    (use-package cquery
+      :disabled "Just give it a try"
+      :homepage https://github.com/jacobdufault/cquery
+      :load-path "~/src/cquery/emacs/"
+      :commands lsp-cquery-enable
+      :init
+      (add-hook 'c-mode-hook #'lsp-cquery-enable)
+      (add-hook 'c++-mode-hook #'lsp-cquery-enable)
+      (add-hook 'objc-mode-hook #'lsp-cquery-enable))
+
+    (use-package transmission
+      :ensure t
+      :defer t)
+
+    (use-package csv-mode
+      :about "Major mode for csv files"
+      :ensure t
+      :defer t
+      :hook (csv-mode . hl-line-mode))
+
+    (use-package po-mode
+      :disabled t                           ; Melpa stopped ship it
+      :about "Major mode for PO files"
+      :ensure t
+      :defer t)
 
 (use-package basic-mode
   :ensure t
@@ -4974,6 +5237,7 @@ _r_: return
     ("q" nil "quit" :color blue)))
 
 (use-package realgud
+  :disabled t                           ; Lots of byte compiling warnings
   :homepage https://github.com/realgud/realgud
   :ensure t
   :defer t
@@ -4987,7 +5251,6 @@ _r_: return
 ;; All right, enough is enough, ALL themes are safe to me.
 (setq custom-safe-themes t)
 ;; (load custom-file :no-error :no-message)
-
 
 ;; add by fengshuu
 
@@ -5171,3 +5434,11 @@ _r_: return
 
 ;; 可以删除选中
 (delete-selection-mode 1)
+
+;;; init.el ends here
+
+;; Local Variables:
+;; bug-reference-url-format: "https://debbugs.gnu.org/cgi/bugreport.cgi?bug=%s"
+;; bug-reference-bug-regexp: "bug#\\(?2:[0-9]+\\)"
+;; eval: (bug-reference-prog-mode)
+;; End:
