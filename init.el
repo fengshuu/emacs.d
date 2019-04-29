@@ -3584,10 +3584,11 @@ Adapt from `org-babel-remove-result'."
   ;; Fix TAB when point is on src block
   (setq org-src-tab-acts-natively t)
 
+  ;; my todo setting
   (setq org-log-done 'time)
 
-  (setq org-directory "~/feng"
-        org-agenda-files '("~/feng/work.org"))
+  (setq org-agenda-files '("~/feng/todoList"))  
+
   (setq org-capture-templates
         '(("t" "Todo" entry (file "todo.org")
            "* TODO %i%?\n:PROPERTIES:\n:CREATED: %U\n:END:\n\n"
@@ -3604,7 +3605,32 @@ Adapt from `org-babel-remove-result'."
           ;;  :empty-lines 1
           ;;  :immediate-finish t)
           ))
+  (setq org-todo-keywords
+     '((sequence "TODO(t)" "BUG(b)" "|" "DONE(d)" "CANCELED(c)"))
+  )  
 
+  ;; todo 归档
+  (defun org-archive-done-tasks ()
+  (interactive)
+  (org-map-entries
+   (lambda ()
+     (org-archive-subtree) ;; 执行函数
+     (setq org-map-continue-from (outline-previous-heading));;跳到指定地方
+   )
+   "/CANCELED";;执行范围
+   'file;;执行范围
+   )
+   (org-map-entries
+   (lambda ()
+     (org-archive-subtree) ;; 执行函数
+     (setq org-map-continue-from (outline-previous-heading));;跳到指定地方
+   )
+   "/DONE";;执行范围
+   'file;;执行范围
+   )
+  )
+
+  
   (setq org-agenda-restore-windows-after-quit t)
 
   (defun chunyang-org-capture ()
@@ -5102,21 +5128,6 @@ _r_: return
 
 (global-set-key (kbd "C-c C-i") 'yas-insert-snippet)
 
-;; todo 归档
-(defun org-archive-done-tasks ()
-  (interactive)
-  (org-map-entries
-   (lambda ()
-     (org-archive-subtree)
-     (setq org-map-continue-from (outline-previous-heading)))
-   "/DONE" 'file)
-  (org-map-entries
-   (lambda ()
-     (org-archive-subtree)
-     (setq org-map-continue-from (outline-previous-heading)))
-   "/CANCELLED" 'file)
-)
-
 ;; 英文补全
 (require 'company-english-helper)
 (global-set-key (kbd "C-c o a") 'toggle-company-english-helper)
@@ -5154,3 +5165,9 @@ _r_: return
     (add-to-list 'bookmark-alist latest)))
 
 (global-set-key (kbd "M-B") 'helm-bookmarks)
+
+;; ace-jump-mode
+(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
+
+;; 可以删除选中
+(delete-selection-mode 1)
