@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: plantUML
+# key: puml
+# --
+#+BEGIN_SRC plantuml :file ./${1:UML_PIC}.png :cmdline -charset utf-8
+$0
+#+END_SRC

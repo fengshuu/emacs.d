@@ -3858,11 +3858,11 @@ Adapt from `org-babel-remove-result'."
     ;; (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
     :defer t)
 
-  (use-package ob-racket
-    :homepage https://github.com/DEADB17/ob-racket
-    :load-path "~/src/ob-racket"
-    :config
-    (add-to-list 'org-src-lang-modes (cons "racket" 'scheme)))
+;;  (use-package ob-racket
+;;    :homepage https://github.com/DEADB17/ob-racket
+;;    :load-path "~/src/ob-racket"
+;;    :config
+;;    (add-to-list 'org-src-lang-modes (cons "racket" 'scheme)))
 
   (add-to-list 'org-src-lang-modes '("js" . js2))
 
@@ -3880,8 +3880,9 @@ Adapt from `org-babel-remove-result'."
      (org        . t)
      (perl       . t)
      (python     . t)
+     (plantuml   . t)
      (R          . t)
-     (racket     . t)
+;;     (racket     . t)
      (ruby       . t)
      (scheme     . t)
      (shell      . t)))
@@ -4768,7 +4769,6 @@ provides similiar function."
 
 
 ;;; Programming Language
-
 (use-package language-detection
   :ensure t
   :defer t
@@ -4813,7 +4813,7 @@ provides similiar function."
 ;; - https://debbugs.gnu.org/cgi/bugreport.cgi?bug=+23412
 
 ;; 临时解决方法，有效但不清楚有没有副作用
-(setq redisplay-dont-pause nil)
+;; (setq redisplay-dont-pause nil)
 
 (use-package opencc
   :ensure t
@@ -5264,7 +5264,7 @@ _r_: return
 (scroll-bar-mode 0)
 
 ;; 显示行号
-(global-linum-mode 1)
+;; (global-linum-mode 1)
 
 ;; 关闭备份
 (setq make-backup-files nil)
@@ -5318,10 +5318,12 @@ _r_: return
 (setq display-time-24hr-format t)
 
 ;; 缩进tab宽度为四个空格，同时设置c代码中语句首字母与括号对齐
-(setq default-tab-width 4)
 (setq-default indent-tabs-mode nil)
-(setq c-default-style "Linux")
+(setq c-syntactic-indentation nil) 
+(setq default-tab-width 4)
+(setq c-default-style "linux")
 (setq c-basic-offset 4)
+(c-set-offset 'k&r 0)
 
 ;; -----绑定键------
 ;; 改变Emacs要你回答yes的行为,按y或空格键表示yes，n表示no。 
@@ -5350,7 +5352,8 @@ _r_: return
 ;; init.el ends here
 
 ;; markdown preview
-(setq markdown-command "pandoc")
+(setq markdown-command "pandoc --metadata title=\"iiii\"")
+(setq markdown-css-paths '("/Users/fengshu/dotfiles/markdown.css"))
 
 (global-set-key (kbd "M-x") 'helm-M-x)
 
@@ -5362,6 +5365,8 @@ _r_: return
 ;; 快捷键
 (global-set-key (kbd "C-c p h") 'helm-projectile)
 (global-set-key (kbd "C-c p p") 'helm-projectile-switch-project)
+(global-set-key (kbd "C-c p f") 'helm-projectile-rg)
+
 
 ;; 快速打开配置文件
 (defun open-init-file()
@@ -5371,25 +5376,7 @@ _r_: return
 ;; 这一行代码，将函数 open-init-file 绑定到 <f2> 键上
 (global-set-key (kbd "<f12>") 'open-init-file)
 
-;; java 编译
-(require 'meghanada)
-(add-hook 'java-mode-hook
-          (lambda ()
-            ;; meghanada-mode on
-            (meghanada-mode t)
-            (flycheck-mode +1)
-            (setq c-basic-offset 2)
-            ;; use code format
-            (add-hook 'before-save-hook 'meghanada-code-beautify-before-save)))
-(cond
-   ((eq system-type 'windows-nt)
-    (setq meghanada-java-path (expand-file-name "bin/java.exe" (getenv "JAVA_HOME")))
-    (setq meghanada-maven-path "mvn.cmd"))
-   (t
-    (setq meghanada-java-path "java")
-    (setq meghanada-maven-path "mvn")))
-
-(global-set-key (kbd "C-c C-i") 'yas-insert-snippet)
+(global-set-key (kbd "C-c i") 'yas-insert-snippet)
 
 ;; 英文补全
 (require 'company-english-helper)
@@ -5430,11 +5417,94 @@ _r_: return
 (global-set-key (kbd "M-B") 'helm-bookmarks)
 
 ;; ace-jump-mode
-(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
+(use-package ace-jump-mode
+  :ensure t
+  :bind ("C-." . ace-jump-mode))
+
+;; sqlbeatiful
+(defun sql-beautify-region (beg end)
+  "Beautify SQL in region between beg and END."
+  (interactive "r")
+  (save-excursion
+    (shell-command-on-region beg end "beautify-sql" nil t)))
+    ;; change sqlbeautify to anbt-sql-formatter if you
+    ;;ended up using the ruby gem
+
+(defun sql-beautify-buffer ()
+ "Beautify SQL in buffer."
+ (interactive)
+ (sql-beautify-region (point-min) (point-max)))
+
+(defun sql-beautify-region-or-buffer ()
+  "Beautify SQL for the entire buffer or the marked region between beg and end"
+  (interactive)
+  (if (use-region-p)
+      (sql-beautify-region (region-beginning) (region-end))
+    (sql-beautify-buffer)))
+
+(add-hook 'sql-mode-hook '(lambda ()                                                                               
+  ;; beautify region or buffer                                                           
+  (local-set-key (kbd "C-M-]") 'sql-beautify-region-or-buffer))) 
+;; end sqlbeatiful
 
 ;; 可以删除选中
 (delete-selection-mode 1)
 
+;; 按C-z可以选中当前行，继续按C-z就继续选下一行。
+(defun yp-mark-line (&optional arg)
+  (interactive "P")
+  (if (region-active-p)
+      (progn
+        (goto-char (line-end-position 2)))
+    (progn
+      (back-to-indentation)
+      (set-mark (point))
+      (goto-char (line-end-position))))
+  (setq arg (if arg (prefix-numeric-value arg)
+              (if (< (mark) (point)) -1 1)))
+  (if (and arg (> arg 1))
+      (progn
+        (goto-char (line-end-position arg)))))
+
+;; 把它绑定到C-z上面：
+(global-set-key (kbd "C-c w") 'yp-mark-line)
+
+;; 如果当前有选中区域就和默认的复制/剪切一样，如果没有选中区域，就复制/剪切当前行，这三个函数都可以接收C-u number做为数字参数，传入数字几就操作几行。
+;; 我在这三个函数中都使用back-to-indentation来移动到行首，可以把行首的空白排除在外，不喜欢的话可以改成move-beginning-of-line.
+;; http://m.newsmth.net/article/Emacs/104019
+(defun yp-copy (&optional arg)
+  "switch action by whether mark is active"
+  (interactive "P")
+  (if mark-active
+      (kill-ring-save (region-beginning) (region-end))
+    (let ((beg (progn (back-to-indentation) (point))) 
+          (end (line-end-position arg)))
+      (copy-region-as-kill beg end))))
+
+(defun yp-kill (&optional arg)
+  "switch action by whether mark is active"
+  (interactive "P")
+  (if mark-active
+      (kill-region (region-beginning) (region-end))
+    (kill-whole-line arg)))
+
+(defun my-kill-word (arg)
+  "Kill characters forward until encountering the end of a word.
+With argument ARG, do this that many times."
+  (interactive "p")
+  (kill-region (progn (backward-word) (point)) (progn (forward-word arg) (point))))
+
+(global-set-key (kbd "M-d") 'my-kill-word)
+(global-set-key (kbd "M-w") 'yp-copy)
+(global-set-key (kbd "C-w") 'yp-kill)
+
+
+;; 自动更新包
+;;(use-package auto-package-update
+;;  :config
+;;  (setq auto-package-update-delete-old-versions t)
+;;  (setq auto-package-update-hide-results t)
+;;  (auto-package-update-maybe))
 ;;; init.el ends here
 
 ;; Local Variables:
@@ -5442,3 +5512,105 @@ _r_: return
 ;; bug-reference-bug-regexp: "bug#\\(?2:[0-9]+\\)"
 ;; eval: (bug-reference-prog-mode)
 ;; End:
+
+;; org-mode 設定
+(require 'org-crypt)
+
+;; 當被加密的部份要存入硬碟時，自動加密回去
+(org-crypt-use-before-save-magic)
+
+;; 設定要加密的 tag 標籤為 secret
+(setq org-crypt-tag-matcher "secret")
+
+;; 避免 secret 這個 tag 被子項目繼承 造成重複加密
+;; (但是子項目還是會被加密喔)
+(setq org-tags-exclude-from-inheritance (quote ("secret")))
+
+;; 用於加密的 GPG 金鑰
+;; 可以設定任何 ID 或是設成 nil 來使用對稱式加密 (symmetric encryption)
+(setq org-crypt-key "fengshuhao")
+
+;; always show line numbers  
+;;(global-linum-mode 1)
+
+(setq org-plantuml-jar-path
+      (expand-file-name "/Users/creditease/.emacs.d/jar/plantuml.jar"))
+
+(defun xah-open-in-safari ()
+  "Open the current file or `dired' marked files in Mac's Safari browser.
+
+If the file is not saved, save it first.
+
+URL `http://ergoemacs.org/emacs/emacs_dired_open_file_in_ext_apps.html'
+Version 2018-02-26"
+  (interactive)
+  (let* (
+         ($file-list
+          (if (string-equal major-mode "dired-mode")
+              (dired-get-marked-files)
+            (list (buffer-file-name))))
+         ($do-it-p (if (<= (length $file-list) 5)
+                       t
+                     (y-or-n-p "Open more than 5 files? "))))
+    (when $do-it-p
+      (cond
+       ((string-equal system-type "darwin")
+        (mapc
+         (lambda ($fpath)
+           (when (buffer-modified-p )
+             (save-buffer))
+           (shell-command
+            (format "open -a Safari.app \"%s\"" $fpath))) $file-list))))))
+
+
+;;C-M-\缩进
+
+;;a batter function for indent
+(defun indent-buffer()
+(interactive)
+(indent-region(point-min) (point-max)))
+ 
+(defun indent-region-or-buffer()
+(interactive)
+(save-excursion
+(if(region-active-p)
+(progn
+(indent-region(region-beginning) (region-end))
+(message"Indent selected region."))
+(progn 
+(indent-buffer)
+(message"Indent buffer.")))))
+;;;;Key binding for this better indent function
+(global-set-key(kbd "C-M-\\") 'indent-region-or-buffer)
+
+;;多行缩进
+(defun shift-region (distance)
+(interactive "nHow many: ")
+(let ((mark (mark)))
+(save-excursion
+(indent-rigidly (region-beginning) (region-end) distance)
+(push-mark mark t t)
+(setq deactivate-mark nil))))
+(global-set-key(kbd "C-|") 'shift-region)
+
+;; goto last change c-. c-,
+(require 'goto-chg)
+(global-set-key [(control ?.)] 'goto-last-change)
+(global-set-key [(control ?,)] 'goto-last-change-reverse)
+
+;; 把滚动和粘贴换一下
+(define-key org-mode-map (kbd "C-y") 'scroll-up-command)
+
+(global-set-key (kbd "C-y") 'scroll-up-command)
+
+(global-set-key (kbd "C-v") 'counsel-yank-pop)
+
+(global-set-key (kbd "M-y") 'scroll-down-command)
+(global-set-key (kbd "C-M-y") 'scroll-other-window)
+(global-set-key (kbd "C-M-S-y") 'scroll-other-window-down)
+
+
+(global-set-key (kbd "M-v") 'org-yank)
+
+;; commonLisp
+(setq inferior-lisp-program "/usr/local/Cellar/sbcl/1.5.7/bin/sbcl")

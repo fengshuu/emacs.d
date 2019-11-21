@@ -2,4 +2,4 @@
 # name: date
 # key: date
 # --
-`(string-trim (shell-command-to-string "date -I"))`
+`(string-trim (shell-command-to-string "date \"+%Y-%m-%d\""))`
