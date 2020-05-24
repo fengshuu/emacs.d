@@ -401,7 +401,7 @@ See URL `https://www.alfredapp.com/help/workflows/inputs/script-filter/json/'."
   (global-set-key (kbd "M-l") 'ivy-switch-buffer)
   (global-set-key (kbd "M-x") 'counsel-M-x)
   (global-set-key (kbd "M-y") 'counsel-yank-pop)
-  (global-set-key (kbd "C-x C-f") 'counsel-find-file)
+;;  (global-set-key (kbd "C-x C-f") 'counsel-find-file)
   (global-set-key (kbd "C-h f") 'counsel-describe-function)
   (global-set-key (kbd "C-h v") 'counsel-describe-variable)
   (global-set-key (kbd "C-c f l") 'counsel-find-library)
@@ -3804,15 +3804,17 @@ Adapt from `org-babel-remove-result'."
   (interactive)
   (org-map-entries
    (lambda ()
-     (org-archive-subtree) ;; 执行函数
+     (let ((org-archive-location "cancel::* %s"))
+       (org-archive-subtree))
      (setq org-map-continue-from (outline-previous-heading));;跳到指定地方
    )
    "/CANCELED";;执行范围
    'file;;执行范围
    )
    (org-map-entries
-   (lambda ()
-     (org-archive-subtree) ;; 执行函数
+    (lambda ()
+    (let ((org-archive-location "zip_%s::"))
+       (org-archive-subtree))
      (setq org-map-continue-from (outline-previous-heading));;跳到指定地方
    )
    "/DONE";;执行范围
@@ -5397,7 +5399,7 @@ _r_: return
   (set-fontset-font
    (frame-parameter nil 'font)
    charset
-   (font-spec :name "-*-Hiragino Sans GB-normal-normal-normal-*-*-*-*-*-p-0-iso10646-1"
+   (font-spec :name "-*-Source Han Serif CN-normal-normal-normal-*-*-*-*-*-p-0-iso10646-1"
               :weight 'normal
               :slant 'normal
               :size 14.5)))
@@ -5419,7 +5421,7 @@ _r_: return
 ;; ace-jump-mode
 (use-package ace-jump-mode
   :ensure t
-  :bind ("C-." . ace-jump-mode))
+  :bind ("M-p" . ace-jump-mode))
 
 ;; sqlbeatiful
 (defun sql-beautify-region (beg end)
@@ -5528,7 +5530,21 @@ With argument ARG, do this that many times."
 
 ;; 用於加密的 GPG 金鑰
 ;; 可以設定任何 ID 或是設成 nil 來使用對稱式加密 (symmetric encryption)
-(setq org-crypt-key "fengshuhao")
+(setq org-crypt-key nil)
+
+;; (setq auto-save-default nil)
+;; Auto-saving does not cooperate with org-crypt.el: so you need
+;; to turn it off if you plan to use org-crypt.el quite often.
+;; Otherwise, you'll get an (annoying) message each time you
+;; start Org.
+;; To turn it off only locally, you can insert this:
+;;
+;; # -*- buffer-auto-save-file-name: nil; -*-
+
+;; 绑定快捷键 C-x C-.
+(add-hook 'org-mode-hook
+          (lambda ()
+            (local-set-key [24 67108910] 'org-decrypt-entry)))
 
 ;; always show line numbers  
 ;;(global-linum-mode 1)
@@ -5609,8 +5625,34 @@ Version 2018-02-26"
 (global-set-key (kbd "C-M-y") 'scroll-other-window)
 (global-set-key (kbd "C-M-S-y") 'scroll-other-window-down)
 
-
+;; 目录
+(global-set-key (kbd "C-x C-f") #'helm-find-files)
 (global-set-key (kbd "M-v") 'org-yank)
 
 ;; commonLisp
 (setq inferior-lisp-program "/usr/local/Cellar/sbcl/1.5.7/bin/sbcl")
+
+(define-key org-mode-map (kbd "C-c C-s") 'yas-insert-snippet)
+
+;; setting up capture
+(setq org-default-notes-file (concat org-directory "/notes.org"))
+(put 'upcase-region 'disabled nil)
+(put 'downcase-region 'disabled nil)
+
+;; set variables
+(setq org-agenda-todo-list-sublevels t)
+
+;; 自动去掉行尾的^M 为什么用不了呢?
+;; (defun clean-line-suffix()    (replace-string C-q C-m))
+(defun delete-carrage-returns ()
+  (interactive)
+  (save-excursion
+    (goto-char 0)
+    (while (search-forward "\r" nil :noerror)
+      (replace-match ""))))
+
+;; auto-save
+(require 'auto-save)            ;; 加载自动保存模块
+
+(auto-save-enable)              ;; 开启自动保存功能
+(setq auto-save-slient t)       ;; 自动保存的时候静悄悄的， 不要打扰我
