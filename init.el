@@ -3742,7 +3742,8 @@ Adapt from `org-babel-remove-result'."
 ;;    (add-to-list 'org-src-lang-modes (cons "racket" 'scheme)))
 
   (add-to-list 'org-src-lang-modes '("js" . js2))
-
+  (add-to-list  'org-src-lang-modes '("plantuml" . plantuml))
+  
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((awk        . t)
@@ -5433,11 +5434,11 @@ With argument ARG, do this that many times."
 ;; always show line numbers  
 ;;(global-linum-mode 1)
 
-(setq org-plantuml-jar-path (expand-file-name "/Users/fengshuhao/.emacs.d/jar/plantuml.jar"))
-;;(use-package plantuml-mode  :ensure t)
+(setq org-plantuml-jar-path (expand-file-name "~/.emacs.d/jar/plantuml.jar"))
+(use-package plantuml-mode  :ensure t)
 ;; Sample jar configuration
-;;(setq plantuml-jar-path "/Users/fengshuhao/.emacs.d/jar/plantuml.jar")
-;;(setq plantuml-default-exec-mode 'jar)
+(setq plantuml-jar-path "~/.emacs.d/jar/plantuml.jar")
+(setq plantuml-default-exec-mode 'jar)
 
 ;; Enable plantuml-mode for PlantUML files
 (add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
