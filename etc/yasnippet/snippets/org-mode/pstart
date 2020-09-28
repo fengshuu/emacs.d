@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: pstart
+# key: pstart
+# --
+@startuml
+start
+$0
+stop
+@enduml

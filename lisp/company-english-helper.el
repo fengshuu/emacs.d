@@ -107,7 +107,6 @@
 ;;
 
 ;;; Require
-(require 'cl)
 (require 'cl-lib)
 (require 'company)
 (require 'company-english-helper-data)

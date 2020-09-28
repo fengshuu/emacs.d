@@ -7,7 +7,7 @@
 
 ;;; Code:
 
-
+
 ;;; Startup
 
 ;; Custom
@@ -17,7 +17,7 @@
 (defun version> (v1 v2) (version< v2 v1))
 (defun version>= (v1 v2) (version<= v2 v1))
 
-
+
 ;;; Package Manager
 
 (when (version<= emacs-version "27")
@@ -27,7 +27,7 @@
                            ("melpa" . "https://elpa.emacs-china.org/melpa/")))
   (package-initialize))
 
-
+
 ;;; `use-package'
 
 (unless (fboundp 'use-package)
@@ -53,12 +53,12 @@
 
 (use-package diminish :ensure t)
 
-
+
 ;;; Extra `load-path'
 
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 
-
+
 ;;; Require helper libraries
 
 (require 'subr-x)
@@ -69,7 +69,7 @@
   :ensure t
   :config (dash-enable-font-lock))
 
-
+
 ;;; Initialization
 
 ;; Disable the site default settings. See (info "(emacs) Init File")
@@ -87,10 +87,10 @@
   (defun chunyang-scratch-save ()
     (ignore-errors
       (with-current-buffer "*scratch*"
-        (write-region nil nil "~/.emacs.d/var/scratch"))))
+        (write-region nil nil "~/Dropbox/feng/scratch"))))
 
   (defun chunyang-scratch-restore ()
-    (let ((f "~/.emacs.d/var/scratch"))
+    (let ((f "~/Dropbox/feng/scratch"))
       (when (file-exists-p f)
         (with-current-buffer "*scratch*"
           (insert-file-contents f)
@@ -108,7 +108,7 @@
 (use-package no-littering
   :ensure t)
 
-
+
 ;;; macOS
 
 (defconst *is-mac* (eq system-type 'darwin))
@@ -165,7 +165,7 @@
   (require 'server)
   (or (server-running-p) (server-mode)))
 
-
+
 ;;; User Interface
 (when (bound-and-true-p tool-bar-mode)
   (tool-bar-mode -1))
@@ -217,6 +217,14 @@
 ;; (setq-default mode-line-format (eval (car (get 'mode-line-format 'standard-value))))
 
 ;; myTheme
+;; (use-package solarized-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'solarized-light t)
+;;   (load-theme 'solarized-dark t)
+;;   )
+
+
 (use-package apropospriate-theme
   :ensure t
   :config 
@@ -237,10 +245,10 @@
 ;;   :init (setq spacemacs-theme-comment-bg nil
 ;;               spacemacs-theme-org-height nil))
 
-;; (use-package tomorrow-theme
-;;   :ensure color-theme-sanityinc-tomorrow
-;;   :defer t
-;;   :init (load-theme 'sanityinc-tomorrow-eighties 'no-comfirm))
+;;(use-package tomorrow-theme
+;;  :ensure color-theme-sanityinc-tomorrow
+;;  :defer t
+;;  :init (load-theme 'sanityinc-tomorrow-eighties 'no-comfirm))
 
 ;; (use-package tangotango-theme
 ;;   :ensure t
@@ -263,7 +271,7 @@
   :config
   (setq frame-tabs-filter-function #'chunyang-frame-tabs-filter))
 
-
+
 ;;; Histroy
 
 (setq history-length 100)
@@ -321,7 +329,7 @@ See URL `https://www.alfredapp.com/help/workflows/inputs/script-filter/json/'."
 (use-package saveplace                  ; Save point position in files
   :config (save-place-mode))
 
-
+
 ;;; Minibuffer
 
 (setq enable-recursive-minibuffers t)
@@ -378,7 +386,7 @@ See URL `https://www.alfredapp.com/help/workflows/inputs/script-filter/json/'."
   :diminish which-key-mode
   :config (which-key-mode))
 
-
+
 ;;; Ivy
 
 ;; counsel -> swiper -> ivy
@@ -401,7 +409,7 @@ See URL `https://www.alfredapp.com/help/workflows/inputs/script-filter/json/'."
   (global-set-key (kbd "M-l") 'ivy-switch-buffer)
   (global-set-key (kbd "M-x") 'counsel-M-x)
   (global-set-key (kbd "M-y") 'counsel-yank-pop)
-  (global-set-key (kbd "C-x C-f") 'counsel-find-file)
+;;  (global-set-key (kbd "C-x C-f") 'counsel-find-file)
   (global-set-key (kbd "C-h f") 'counsel-describe-function)
   (global-set-key (kbd "C-h v") 'counsel-describe-variable)
   (global-set-key (kbd "C-c f l") 'counsel-find-library)
@@ -426,7 +434,7 @@ See URL `https://www.alfredapp.com/help/workflows/inputs/script-filter/json/'."
   :after company
   :config (company-prescient-mode))
 
-
+
 ;;; Helm
 
 (use-package helm
@@ -478,7 +486,7 @@ See URL `https://www.alfredapp.com/help/workflows/inputs/script-filter/json/'."
   :ensure t
   :defer t)
 
-
+
 ;;; Buffers, Windows and Frames
 
 (use-package uniquify  ; Make buffer names unique (turn on by default)
@@ -670,7 +678,7 @@ One C-u, swap window, two C-u, `chunyang-window-click-swap'."
 
 (bind-key "M-RET" #'toggle-frame-maximized)
 
-
+
 ;;; File handle
 ;; Keep backup and auto save files out of the way
 ;; NOTE: Commenting this out because `no-littering.el' is doing this for me
@@ -816,7 +824,7 @@ One C-u, swap window, two C-u, `chunyang-window-click-swap'."
   :ensure t
   :defer t)
 
-
+
 ;;; Basic Editing
 
 ;; Disable tabs, but given them proper width
@@ -977,7 +985,7 @@ One C-u, swap window, two C-u, `chunyang-window-click-swap'."
   (setq undo-tree-visualizer-timestamps t)
   (global-undo-tree-mode))
 
-
+
 ;;; Whitespace - Highlight and Manage Whitespaces
 
 (use-package whitespace               ; Highlight bad whitespace (tab)
@@ -1009,7 +1017,7 @@ One C-u, swap window, two C-u, `chunyang-window-click-swap'."
 ;; `cycle-spacing'
 ;; `delete-blank-lines'
 
-
+
 ;;; Enable & Disable some commands
 
 (put 'narrow-to-region 'disabled nil)
@@ -1021,7 +1029,7 @@ One C-u, swap window, two C-u, `chunyang-window-click-swap'."
 
 (put 'list-timers 'disabled nil)
 
-
+
 ;;; Navigation and scrolling
 
 (setq scroll-preserve-screen-position 'always)
@@ -1072,7 +1080,7 @@ One C-u, swap window, two C-u, `chunyang-window-click-swap'."
   :defer t
   :config)
 
-
+
 ;;; Search
 ;; | Command     | Note                            |
 ;; |-------------+---------------------------------|
@@ -1170,7 +1178,7 @@ Intended to be added to `isearch-mode-hook'."
   :ensure t
   :defer t)
 
-
+
 ;;; Highlight
 
 ;; Disable annoying mouse highlighting for Org Agenda, also see
@@ -1236,7 +1244,7 @@ Intended to be added to `isearch-mode-hook'."
   :load-path "~/src/emacs-hl-issue-id"
   :config (global-hl-issue-id-mode))
 
-
+
 ;;; Skeletons, completion and expansion
 
 (use-package abbrev                     ; For fixing typo only for now
@@ -1315,45 +1323,9 @@ Intended to be added to `isearch-mode-hook'."
 (use-package yasnippet-snippets
   :ensure t
   :after yasnippet
-  :config (yas-reload-all))
-
-
-;;; Spelling and syntax checking
-
-(use-package flyspell
-  :init
-  ;; (add-hook 'text-mode-hook #'flyspell-mode)
-  ;; (add-hook 'prog-mode-hook #'flyspell-prog-mode)
-  ;; Magit commit message
-  (add-hook 'git-commit-mode-hook #'flyspell-mode)
-  ;; VC commit message
-  (add-hook 'log-edit-mode-hook #'flyspell-mode)
-  ;; Email
-  (add-hook 'message-mode-hook #'flyspell-mode)
-  (use-package ispell
-    :defer t
-    :init
-    (setq ispell-program-name "aspell"
-          ispell-extra-args
-          '("--sug-mode=fast"
-            ;; NOTE 我把 macOS 改成了中文语言，然后 Emacs:
-            ;;
-            ;; (getenv "LANG")
-            ;; ;; => "zh-Hans_US.UTF-8"
-            ;;
-            ;; 导致 Aspell 试图找 zh 语言的字典，遂失败
-            "--lang=en_US")))
-  :bind ("C-c t s" . flyspell-mode)
   :config
-  (unbind-key "C-."   flyspell-mode-map)
-  (unbind-key "C-M-i" flyspell-mode-map)
-  (unbind-key "C-;"   flyspell-mode-map)
-  (use-package flyspell-popup
-    :ensure t
-    :config
-    (bind-key "C-." #'flyspell-popup-correct flyspell-mode-map)
-    (add-hook 'flyspell-mode-hook #'flyspell-popup-auto-correct-mode)))
-
+  (yas-reload-all)
+  (add-hook 'prog-mode-hook #'yas-minor-mode))
 
 (use-package langtool       ; LanguageTool <https://languagetool.org/>
   :homepage https://github.com/mhayashi1120/Emacs-langtool
@@ -1462,7 +1434,7 @@ Intended to be added to `isearch-mode-hook'."
   :after flycheck
   :config (flycheck-elsa-setup))
 
-
+
 ;;; Markup languages
 
 ;; TODO: Fontify markdown link like org, see `org-descriptive-links',
@@ -1545,7 +1517,7 @@ unlike `markdown-preview'."
   :init (setq deft-extensions '("md"))
   :config (setq deft-markdown-mode-title-level 1))
 
-
+
 ;;; PDF
 
 (use-package pdf-tools
@@ -1582,7 +1554,7 @@ unlike `markdown-preview'."
 
   "the ugly placement (for better line-base diff)")
 
-
+
 ;;; Programming utilities
 
 ;; `glasses-mode' -- 把 areYouReady 显示成 are_You_Ready
@@ -1679,7 +1651,7 @@ unlike `markdown-preview'."
   (keyfreq-mode)
   (keyfreq-autosave-mode))
 
-
+
 ;; Languages
 
 (use-package json-mode
@@ -1690,7 +1662,7 @@ unlike `markdown-preview'."
 
 (use-package yaml-mode :ensure t :defer t)
 
-
+
 ;;; Generic Lisp
 
 (use-package paredit                    ; Balanced sexp editing
@@ -1720,7 +1692,7 @@ unlike `markdown-preview'."
   (require 'smartparens-config)
   (smartparens-global-mode))
 
-
+
 ;;; Emacs Lisp
 
 (use-package elisp-mode
@@ -2182,11 +2154,11 @@ PACKAGE should not be a built-in package."
   :ensure t
   :defer t)
 
-(use-package elisp-demos
-  :load-path "~/src/elisp-demos"
-  :config
-  (advice-add 'describe-function-1 :after #'elisp-demos-advice-describe-function-1)
-  (advice-add 'helpful-update :after #'elisp-demos-advice-helpful-update))
+;; (use-package elisp-demos
+;;   :load-path "~/src/elisp-demos"
+;;   :config
+;;   (advice-add 'describe-function-1 :after #'elisp-demos-advice-describe-function-1)
+;;   (advice-add 'helpful-update :after #'elisp-demos-advice-helpful-update))
 
 (use-package other-emacs-eval
   :ensure t
@@ -2207,7 +2179,7 @@ PACKAGE should not be a built-in package."
   :homepage https://github.com/vermiculus/emake.el
   :disabled t)
 
-
+
 ;;; Help & Info
 
 (use-package find-func
@@ -2355,7 +2327,7 @@ PACKAGE should not be a built-in package."
        (lambda (software)
          (format "https://sourceware.org/gdb/onlinedocs/%s/%%s" software)))
       ;; Emacs info documents.  Taken from `org-info-emacs-documents'
-      (("ada-mode" "auth" "autotype" "bovine" "calc" "ccmode" "cl" "dbus" "dired-x"
+      (("ada-mode" "auth" "autotype" "bovine" "calc" "ccmode" "cl-lib" "dbus" "dired-x"
         "ebrowse" "ede" "ediff" "edt" "efaq-w32" "efaq" "eieio" "eintr" "elisp"
         "emacs-gnutls" "emacs-mime" "emacs" "epa" "erc" "ert" "eshell" "eudc" "eww"
         "flymake" "forms" "gnus" "htmlfontify" "idlwave" "ido" "info" "mairix-el"
@@ -2454,7 +2426,7 @@ PACKAGE should not be a built-in package."
   :disabled t
   :ensure t)
 
-
+
 ;;; Version Control
 
 (use-package diff-mode
@@ -2605,7 +2577,7 @@ PACKAGE should not be a built-in package."
 (use-package chunyang-git
   :commands chunyang-git-tree)
 
-
+
 ;;; Tools and utilities
 
 (use-package repeater
@@ -2623,63 +2595,63 @@ PACKAGE should not be a built-in package."
   :defer t
   :config (setq woman-fill-frame t))
 
-(use-package comint
-  :defer t
-  :init
-  (define-advice comint-run (:before (_program) fix-interactive-form)
-    "Fix the original interactive form."
-    (interactive (list (read-shell-command "Run program: "))))
-  :config
-  ;; Disable auto scroll on RET (like Eshell)
-  (setq comint-scroll-show-maximum-output nil))
-
-;; XXX: Not working under EXWM
-(use-package atomic-chrome
-  :ensure t                             ; To install its dependencies
-  :defer 7                              ; since the entry of this
-                                        ; package is from Chrome
-  :preface
-  (defun chunyang-atomic-chrome-server-running-p ()
-    (cond ((executable-find "ss")       ; iproute2
-           (zerop (call-process-shell-command "ss -tna | grep 64292")))
-          ((executable-find "lsof")     ; lsof
-           (zerop (call-process "lsof" nil nil nil "-i" ":64292")))
-          ((executable-find "netstat")  ; net-tools
-           (zerop (call-process-shell-command "netstat -aon | grep 64292")))))
-  :config
-  (setq atomic-chrome-url-major-mode-alist
-        '(
-          ;; https://courses.edx.org/courses/course-v1:MITx+6.00.1x+2T2017_2/course/
-          ("6\\.00\\.1" . python-mode)
-          ;; [[https://guides.github.com/features/mastering-markdown/][Mastering Markdown · GitHub Guides]]
-          ("github\\.com"             . gfm-mode)
-          ;; [[https://stackoverflow.com/editing-help][Markdown Editing Help - Stack Overflow]]
-          ("stackoverflow\\.com"      . markdown-mode)
-          ("stackexchange\\.com"      . markdown-mode)
-          ;; [[http://commonmark.org/help/][Markdown Reference]] (Discourse)
-          ("emacs-china\\.org"        . markdown-mode)
-          ("meta\\.discoursecn\\.org" . markdown-mode)
-          ("0x00sec\\.org"            . markdown-mode)
-          ("forums\\.debiancn\\.org"  . markdown-mode)
-          ("users\\.rust-lang\\.org"  . markdown-mode)
-          ("meta\\.appinn\\.com"      . markdown-mode)
-          ;; [[https://en.wikipedia.org/wiki/Help:Wiki_markup][Help:Wiki markup - Wikipedia]] (MediaWiki)
-          ("wiki\\.archlinux\\.org"   . mediawiki-mode)
-          ;; [[https://en.wikipedia.org/wiki/BBCode][BBCode - Wikipedia]] (phpBB)
-          ("bbs\\.archlinux\\.org"    . bbcode-mode)
-          ("bbs\\.archlinuxcn\\.org"  . bbcode-mode)))
-
-  (defun chunyang-atomic-chrome-mode-setup ()
-    (setq header-line-format
-          (substitute-command-keys
-           "Edit Chrome text area.  Finish \
-`\\[atomic-chrome-close-current-buffer]'.")))
-
-  (add-hook 'atomic-chrome-edit-mode-hook #'chunyang-atomic-chrome-mode-setup)
-
-  (if (chunyang-atomic-chrome-server-running-p)
-      (message "Can't start atomic-chrome server, because port 64292 is already used")
-    (atomic-chrome-start-server)))
+;; (use-package comint
+;;   :defer t
+;;   :init
+;;   (define-advice comint-run (:before (_program) fix-interactive-form)
+;;     "Fix the original interactive form."
+;;     (interactive (list (read-shell-command "Run program: "))))
+;;   :config
+;;   ;; Disable auto scroll on RET (like Eshell)
+;;   (setq comint-scroll-show-maximum-output nil))
+;; 
+;; ;; XXX: Not working under EXWM
+;; (use-package atomic-chrome
+;;   :ensure t                             ; To install its dependencies
+;;   :defer 7                              ; since the entry of this
+;;                                         ; package is from Chrome
+;;   :preface
+;;   (defun chunyang-atomic-chrome-server-running-p ()
+;;     (cond ((executable-find "ss")       ; iproute2
+;;            (zerop (call-process-shell-command "ss -tna | grep 64292")))
+;;           ((executable-find "lsof")     ; lsof
+;;            (zerop (call-process "lsof" nil nil nil "-i" ":64292")))
+;;           ((executable-find "netstat")  ; net-tools
+;;            (zerop (call-process-shell-command "netstat -aon | grep 64292")))))
+;;   :config
+;;   (setq atomic-chrome-url-major-mode-alist
+;;         '(
+;;           ;; https://courses.edx.org/courses/course-v1:MITx+6.00.1x+2T2017_2/course/
+;;           ("6\\.00\\.1" . python-mode)
+;;           ;; [[https://guides.github.com/features/mastering-markdown/][Mastering Markdown · GitHub Guides]]
+;;           ("github\\.com"             . gfm-mode)
+;;           ;; [[https://stackoverflow.com/editing-help][Markdown Editing Help - Stack Overflow]]
+;;           ("stackoverflow\\.com"      . markdown-mode)
+;;           ("stackexchange\\.com"      . markdown-mode)
+;;           ;; [[http://commonmark.org/help/][Markdown Reference]] (Discourse)
+;;           ("emacs-china\\.org"        . markdown-mode)
+;;           ("meta\\.discoursecn\\.org" . markdown-mode)
+;;           ("0x00sec\\.org"            . markdown-mode)
+;;           ("forums\\.debiancn\\.org"  . markdown-mode)
+;;           ("users\\.rust-lang\\.org"  . markdown-mode)
+;;           ("meta\\.appinn\\.com"      . markdown-mode)
+;;           ;; [[https://en.wikipedia.org/wiki/Help:Wiki_markup][Help:Wiki markup - Wikipedia]] (MediaWiki)
+;;           ("wiki\\.archlinux\\.org"   . mediawiki-mode)
+;;           ;; [[https://en.wikipedia.org/wiki/BBCode][BBCode - Wikipedia]] (phpBB)
+;;           ("bbs\\.archlinux\\.org"    . bbcode-mode)
+;;           ("bbs\\.archlinuxcn\\.org"  . bbcode-mode)))
+;; 
+;;   (defun chunyang-atomic-chrome-mode-setup ()
+;;     (setq header-line-format
+;;           (substitute-command-keys
+;;            "Edit Chrome text area.  Finish \
+;; `\\[atomic-chrome-close-current-buffer]'.")))
+;; 
+;;   (add-hook 'atomic-chrome-edit-mode-hook #'chunyang-atomic-chrome-mode-setup)
+;; 
+;;   (if (chunyang-atomic-chrome-server-running-p)
+;;       (message "Can't start atomic-chrome server, because port 64292 is already used")
+;;     (atomic-chrome-start-server)))
 
 (use-package ediff
   :defer t
@@ -2705,8 +2677,10 @@ PACKAGE should not be a built-in package."
   (add-hook 'ediff-quit-hook #'winner-undo 'append))
 
 (use-package server
+  :ensure nil
   :defer 3
   :config
+  (autoload 'server-running-p "server")
   (unless (server-running-p) (server-mode))
 
   (defun open-emacs-window ()
@@ -2880,7 +2854,7 @@ This should be add to `find-file-hook'."
 (use-package haikunator
   :commands haikuantor-insert)
 
-
+
 ;;; Documentation
 
 (use-package dashdoc
@@ -2902,14 +2876,14 @@ This should be add to `find-file-hook'."
   :ensure t
   :defer t)
 
-
+
 ;;; Project
 
 (use-package projectile
   :ensure t
   :defer t)
 
-
+
 ;;; Web & IRC & Email & RSS
 
 (use-package rcirc
@@ -3100,145 +3074,6 @@ proxychains4 mbsync --verbose --all && notmuch new&")
   ;; Saving file /Users/xcy/.emacs.d/var/url/configuration/cookies...
   (advice-add 'url-cookie-setup-save-timer :override #'ignore))
 
-(use-package eww
-  :defer t
-  :preface
-  (defun chunyang-eww-toggle-image ()
-    (interactive)
-    (setq shr-inhibit-images (not shr-inhibit-images))
-    (eww-reload)
-    (message "Image is now %s"
-             (if shr-inhibit-images "off" "on")))
-
-  (defun chunyang-eww-visit-chrome-tab ()
-    "Visit URL of current Chrome Tab with EWW."
-    (interactive)
-    (unless  (eq system-type 'darwin)
-      (user-error "Not supported system, only works on macOS"))
-    (let ((url (do-applescript
-                (concat "tell application \"Google Chrome\" to "
-                        "return URL of active tab of first window"))))
-      ;; Remove double quotes if exists
-      (setq url (string-trim url "\"" "\""))
-      (when (string-prefix-p "file://" url)
-        (setq url (url-unhex-string url)
-              url (replace-regexp-in-string "\\?.*$" "" url)))
-      (eww url)))
-
-  (defun helm-eww-bookmarks ()
-    "My EWW bookmarks manager using helm."
-    (interactive)
-    (require 'helm)
-    (require 'helm-adaptive)
-    (require 'eww)
-    (helm :sources
-          (list
-           (helm-build-sync-source "EWW Bookmarks"
-             :candidates
-             (lambda ()
-               (cl-loop for elt in (eww-read-bookmarks)
-                        collect
-                        (cons (concat (plist-get elt :title)
-                                      "\n"
-                                      (propertize (plist-get elt :url)
-                                                  'face 'link))
-                              (plist-get elt :url))))
-             :multiline t
-             :action (helm-make-actions
-                      "Eww" #'eww
-                      "Browse-url" #'browse-url
-                      "Copy URL" (lambda (url)
-                                   (kill-new url)
-                                   (message "Copied: %s" url)))
-             :filtered-candidate-transformer #'helm-adaptive-sort)
-           (helm-build-dummy-source "EWW URL"
-             :action #'eww))
-          :buffer "*Helm EWW Bookmarks*"))
-
-  (defun chunyang-eww-import-bookmarks (bookmarks-html-file)
-    "Import bookmarks from BOOKMARKS-HTML-FILE.
-Note that this will OVERRIDE the existing EWW bookmarks."
-    (interactive "fBookmarks HTML File: ")
-
-    ;; Check if some libraries exist
-    (require 'eww)
-    (unless (require 'dom nil 'no-error)
-      (user-error "dom.el not available, it was added in Emacs 25.1"))
-    (unless (fboundp 'libxml-parse-html-region)
-      (user-error "`libxml-parse-html-region' not available, \
-your Emacs doesn't have libxml2 support"))
-
-    (with-temp-buffer
-      (insert-file-contents bookmarks-html-file)
-      (setq eww-bookmarks
-            (cl-loop with dom = (libxml-parse-html-region (point-min) (point-max))
-                     for a in (dom-by-tag dom 'a)
-                     for url = (dom-attr a 'href)
-                     for title = (dom-text a)
-                     for time = (current-time-string
-                                 (seconds-to-time
-                                  (string-to-number
-                                   (dom-attr a 'add_date))))
-                     collect (list :url url
-                                   :title title
-                                   :time time)))
-      (eww-write-bookmarks)))
-
-  (defun chunyang-eww-import-bookmarks-from-chrome-1 (json)
-    "Adapted from `helm-chrome--add-bookmark'."
-    (when (and (listp json) (listp (cdr json)))
-      (cond
-       ((assq 'roots json)
-        (dolist (item (alist-get 'roots json))
-          (chunyang-eww-import-bookmarks-from-chrome-1 item)))
-       ((equal (alist-get 'type json) "folder")
-        (cl-loop for item across (alist-get 'children json)
-                 do (chunyang-eww-import-bookmarks-from-chrome-1 item)))
-       ((equal (alist-get 'type json) "url")
-        (setq eww-bookmarks
-              (append eww-bookmarks
-                      (list (list
-                             :url  (alist-get 'url json)
-                             :title (alist-get 'name json)
-                             :time (seconds-to-time
-                                    (string-to-number
-                                     (let ((str (alist-get 'date_added json)))
-                                       ;; 1 second = 100,000 micro seconds
-                                       (substring str 0 (- (length str) 6)))))))))))))
-
-  (defun chunyang-eww-import-bookmarks-from-chrome ()
-    "Import bookmarks from Google Chrome's Bookmarks JSON file.
-Note that this will OVERRIDE the existing EWW bookmarks."
-    (interactive)
-    (let ((bookmark-file
-           (cl-find-if
-            #'file-exists-p
-            `("~/Library/Application Support/Google/Chrome/Profile 1/Bookmarks"
-              "~/.config/chromium/Default/Bookmarks"))))
-      (require 'json)
-      (chunyang-eww-import-bookmarks-from-chrome-1
-       (json-read-file bookmark-file)))
-    (eww-write-bookmarks))
-
-  ;; http://acidwords.com/posts/2017-12-01-distraction-free-eww-surfing.html
-  (defun sanel-eww-more-readable ()
-    "Makes eww more pleasant to use. Run it after eww buffer is loaded."
-    (interactive)
-    (setq eww-header-line-format nil)              ; removes page title
-    (setq mode-line-format nil)                    ; removes mode-line
-    (set-window-margins (get-buffer-window) 20 20) ; increases size of margins
-    (redraw-display)                               ; apply mode-line changes
-    (eww-reload))                                  ; apply eww-header changes
-  :config
-  (bind-key "M" #'chunyang-eww-toggle-image eww-mode-map)
-  ;; Sync bookmarks every time from Chrome
-  (chunyang-eww-import-bookmarks-from-chrome)
-  ;; XXX Both Google & DuckDuckGo are currently bocked in China
-  (setq eww-search-prefix "https://duckduckgo.com/html/?q=")
-  ;; Eww doesn't support Javascript, but HTTPS version of Google requires it (?)
-  ;; (setq eww-search-prefix "https://www.google.com.hk/search?q=")
-  (setq eww-search-prefix "http://www.google.com.hk/search?q=")
-  (setq eww-search-prefix "https://www.bing.com/search?q="))
 
 (use-package shr-tag-pre-highlight
   :ensure t
@@ -3277,7 +3112,7 @@ Note that this will OVERRIDE the existing EWW bookmarks."
   :load-path "~/src/web-search.el"
   :bind ("M-s M-s" . web-search))
 
-
+
 ;;; Music
 
 (use-package emms
@@ -3311,6 +3146,7 @@ Note that this will OVERRIDE the existing EWW bookmarks."
 
   (add-hook 'emms-player-seeked-functions #'chunyang-emms-indicate-seek 'append))
 
+;;music
 (use-package bongo
   :ensure t
   :defer t
@@ -3369,7 +3205,7 @@ Note that this will OVERRIDE the existing EWW bookmarks."
     "curl -s 'http://gecimi.com/api/lyric/%s' | jq .result[0].lrc | xargs curl -s"
     song-name)))
 
-
+
 ;;; Dictionary
 
 (use-package youdao-dictionary
@@ -3453,7 +3289,7 @@ Note that this will OVERRIDE the existing EWW bookmarks."
   ;; TODO: Render the reuslt
   (shell-command (format "curl 'https://www.moedict.tw/uni/%s'" query)))
 
-
+
 ;;; Shell (including shell-command, shell, term and Eshell)
 
 (use-package flycheck-checkbashisms    ; Don't use Bash-only features in /bin/sh
@@ -3584,7 +3420,7 @@ Note that this will OVERRIDE the existing EWW bookmarks."
   (with-eval-after-load 'eshell
     (eshell-did-you-mean-setup)))
 
-
+
 ;;; Emacs + Shell
 
 (define-advice shell-command (:after (&rest _) exchange-point-and-mark)
@@ -3646,7 +3482,7 @@ Because I usualy want to delete the final trailing newline."
   :ensure t
   :defer t)
 
-
+
 ;;; Calendar
 
 (use-package calendar
@@ -3666,7 +3502,7 @@ Because I usualy want to delete the final trailing newline."
   :ensure t
   :commands cfw:open-org-calendar)
 
-
+
 ;;; Org mode
 
 (use-package org
@@ -3777,42 +3613,83 @@ Adapt from `org-babel-remove-result'."
   ;; my todo setting
   (setq org-log-done 'time)
 
-  (setq org-agenda-files '("~/feng/todoList"))  
+  (setq org-agenda-files '("~/Dropbox/feng/gtd"))
 
+  
+;;  '(org-refile-targets (quote (("task.org" :level . 2))))  
+;;  (org-remember-insinuate)
+
+;;  (org-remember-insinuate)
+  
+  (setq org-directory "~/Dropbox/feng/gtd/")
   (setq org-capture-templates
-        '(("t" "Todo" entry (file "todo.org")
-           "* TODO %i%?\n:PROPERTIES:\n:CREATED: %U\n:END:\n\n"
-           :empty-lines 1)
-          ;; ("n" "Note" entry (file "notes.org")
-          ;;  "* %?\n:PROPERTIES:\n:CREATED: %U\n:END:\n\n"
-          ;;  :empty-lines 1)
-          ;; ("j" "Journal" plain (file+datetree "journal.org")
-          ;;  "%?"
-          ;;  :time-prompt t
-          ;;  :empty-lines 1)
-          ;; ("b" "Bookmark" entry (file "bookmarks.org")
-          ;;  "* %?%(grab-mac-link 'chrome 'org)\n:PROPERTIES:\n:CREATED: %U\n:END:\n\n"
-          ;;  :empty-lines 1
-          ;;  :immediate-finish t)
-          ))
-  (setq org-todo-keywords
-     '((sequence "TODO(t)" "BUG(b)" "|" "DONE(d)" "CANCELED(c)"))
-  )  
+  `(("t" "Todo" entry (file+headline "~/Dropbox/feng/gtd/task.org" "Tasks")
+         "* TODO %^{Brief Description} %^g\n%?Added: %U" 
+         :empty-lines 1)
+    ("j" "Journal" entry (file+headline "~/Dropbox/feng/gtd/journal.org" ,(format-time-string "%b %Y" (current-time)))
+     "* %^{Brief Description} %^g\n%?\nAdded: %U"
+     :empty-lines 1)
+    ("s" "someday" entry (file "~/Dropbox/feng/gtd/someday.org") "* %?\nAdded: %U"
+     :empty-lines 1)
+        ;; ("n" "Note" entry (file "notes.org")
+        ;;  "* %?\n:PROPERTIES:\n:CREATED: %U\n:END:\n\n"
+        ;;  :empty-lines 1)
+        ;; ("j" "Journal" plain (file+datetree "journal.org")
+        ;;  "%?"
+        ;;  :time-prompt t
+        ;;  :empty-lines 1)
+        ;; ("b" "Bookmark" entry (file "bookmarks.org")
+        ;;  "* %?%(grab-mac-link 'chrome 'org)\n:PROPERTIES:\n:CREATED: %U\n:END:\n\n"
+        ;;  :empty-lines 1
+        ;;  :immediate-finish t)
+        ))
+  
+  (setq org-default-notes-file (concat org-directory "/task.org"))
+    
+;; setting up capture
+(put 'upcase-region 'disabled nil)
+(put 'downcase-region 'disabled nil)
 
+(setq org-agenda-time-grid '((daily today require-timed)
+ (600 700 800 900 1000 1100 1200 1300 1400 1500 1600 1700 1800 1900 2000 2100 2200 2300)
+ "......" "----------------"))
+
+(setq org-refile-targets (quote (("task.org" :maxlevel . 1) 
+                              ("someday.org" :level . 2))))
+
+(setq org-agenda-custom-commands
+     '(("h" "Office and Home Lists"
+         ((agenda)
+          (tags-todo "OFFICE")
+          (tags-todo "HOME")))
+        ("d" "Daily Action List"
+         ((agenda "" ((org-agenda-ndays 1)
+                      (org-agenda-sorting-strategy
+                       (quote ((agenda time-up priority-down tag-up) )))
+                       (org-deadline-warning-days 0)
+                       ))))))
+
+;; set variables
+(setq org-agenda-todo-list-sublevels t)
+(setq org-todo-keywords
+     '((sequence "TODO(t)" "STARTED(s)" "WAITING(w)" "|" "DONE(d@/!)" "CANCELED(c@/!)")
+  ))
   ;; todo 归档
   (defun org-archive-done-tasks ()
   (interactive)
   (org-map-entries
    (lambda ()
-     (org-archive-subtree) ;; 执行函数
+     (let ((org-archive-location "archive::* CANCEL"))
+       (org-archive-subtree))
      (setq org-map-continue-from (outline-previous-heading));;跳到指定地方
    )
    "/CANCELED";;执行范围
    'file;;执行范围
    )
    (org-map-entries
-   (lambda ()
-     (org-archive-subtree) ;; 执行函数
+    (lambda ()
+    (let ((org-archive-location "archive::* DOWN"))
+       (org-archive-subtree))
      (setq org-map-continue-from (outline-previous-heading));;跳到指定地方
    )
    "/DONE";;执行范围
@@ -3838,9 +3715,9 @@ Adapt from `org-babel-remove-result'."
   (add-hook 'org-agenda-mode-hook #'hl-line-mode)
 
   ;; Support link to Manpage, EWW and Notmuch
-  (require 'org-man nil 'noerror)
-  (require 'org-eww)
-  (require 'org-notmuch nil 'noerror)
+ (require 'org-man nil 'noerror)
+ ;;(require 'org-eww)
+ (require 'org-notmuch nil 'noerror)
 
   (use-package ob-lisp                  ; Common Lisp
     :defer t
@@ -3858,11 +3735,11 @@ Adapt from `org-babel-remove-result'."
     ;; (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
     :defer t)
 
-  (use-package ob-racket
-    :homepage https://github.com/DEADB17/ob-racket
-    :load-path "~/src/ob-racket"
-    :config
-    (add-to-list 'org-src-lang-modes (cons "racket" 'scheme)))
+;;  (use-package ob-racket
+;;    :homepage https://github.com/DEADB17/ob-racket
+;;    :load-path "~/src/ob-racket"
+;;    :config
+;;    (add-to-list 'org-src-lang-modes (cons "racket" 'scheme)))
 
   (add-to-list 'org-src-lang-modes '("js" . js2))
 
@@ -3880,8 +3757,9 @@ Adapt from `org-babel-remove-result'."
      (org        . t)
      (perl       . t)
      (python     . t)
+     (plantuml   . t)
      (R          . t)
-     (racket     . t)
+;;     (racket     . t)
      (ruby       . t)
      (scheme     . t)
      (shell      . t)))
@@ -3999,7 +3877,7 @@ Adapt from `org-babel-remove-result'."
   :ensure t
   :defer t)
 
-
+
 ;;; C
 
 ;; C Programming Tools:
@@ -4110,7 +3988,7 @@ Adapt from `org-babel-remove-result'."
   (eval-after-load 'flycheck
     '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup)))
 
-
+
 ;;; Rust
 
 (use-package rust-mode
@@ -4143,7 +4021,7 @@ Adapt from `org-babel-remove-result'."
   :ensure t
   :defer t)
 
-
+
 ;;; Common Lisp
 
 (use-package slime
@@ -4193,7 +4071,7 @@ provides similiar function."
   ;; Enable Paredit in REPL too
   (add-hook 'sly-mrepl-mode-hook #'paredit-mode))
 
-
+
 ;;; newLISP <http://www.newlisp.org/>
 
 (use-package newlisp-mode
@@ -4201,7 +4079,7 @@ provides similiar function."
   :homepage https://github.com/kosh04/newlisp-mode
   :defer t)
 
-
+
 ;;; Ruby
 
 (use-package ruby-mode
@@ -4228,7 +4106,7 @@ provides similiar function."
   :defer t
   :init (add-hook 'ruby-mode-hook #'ruby-tools-mode))
 
-
+
 ;;; Standard ML
 
 (use-package sml-mode
@@ -4244,7 +4122,7 @@ provides similiar function."
   :ensure t
   :after org)
 
-
+
 ;;; Scheme
 
 (use-package geiser                     ; For Scheme
@@ -4389,11 +4267,9 @@ provides similiar function."
   ;; This is annoying!
   (advice-add 'racket--repl-show-and-move-to-end :override #'ignore))
 
-(use-package scribble-mode
-  :about https://docs.racket-lang.org/scribble/index.html
-  :homepage https://github.com/emacs-pe/scribble-mode
-  :ensure t
-  :defer t)
+(use-package scribble-mode :about
+  https://docs.racket-lang.org/scribble/index.html :homepage
+  https://github.com/emacs-pe/scribble-mode :ensure t :defer t)
 
 ;; NOTE: scribble.el and scribble-mode.el are two different package,
 ;; though they are supposed to provide the same function, they can't
@@ -4404,7 +4280,7 @@ provides similiar function."
   :load-path "~/src/emacs-scribble"
   :mode ("\\.scrbl\\'" . scribble-mode))
 
-
+
 ;;; Web
 
 (use-package sgml-mode
@@ -4504,12 +4380,6 @@ provides similiar function."
      (point)))
   :hook (js2-mode . tern-mode))
 
-(use-package company-tern
-  :ensure t
-  :after (company tern)
-  :homepage https://github.com/proofit404/company-tern
-  :init (add-to-list 'company-backends 'company-tern)
-  :defer t)
 
 (use-package js2-refactor
   :ensure t
@@ -4576,7 +4446,7 @@ provides similiar function."
     (browse-url "http://localhost:8888/"))
   :defer t)
 
-
+
 ;;; Elixir
 
 (use-package elixir-mode
@@ -4600,7 +4470,7 @@ provides similiar function."
   :ensure t
   :defer t)
 
-
+
 ;;; Clojure
 
 (use-package clojure-mode
@@ -4638,7 +4508,7 @@ provides similiar function."
                  (doc-one-line (substring doc 0 (string-match "\n" doc))))
        (concat "  |  " (propertize doc-one-line 'face 'italic))))))
 
-
+
 ;;; Python
 
 (use-package python
@@ -4712,7 +4582,7 @@ provides similiar function."
   :config
   (add-to-list 'company-backends 'company-anaconda))
 
-
+
 ;;; Lua
 
 (use-package lua-mode
@@ -4725,13 +4595,13 @@ provides similiar function."
   :config
   (add-to-list 'company-backends 'company-lua))
 
-
+
 ;;; Janet <https://janet-lang.org/>
 
 (use-package janet
   :commands run-janet)
 
-
+
 ;;; Misc
 
 (use-package ascii-art-to-unicode
@@ -4751,7 +4621,7 @@ provides similiar function."
   :load-path "~/src/e2ansi"
   :defer t)
 
-
+
 ;;; IM
 
 (use-package gitter
@@ -4760,15 +4630,14 @@ provides similiar function."
   :config
   (setq gitter--debug t))
 
-
+
 ;;; News
 
 (use-package hn
   :commands list-hacker-news)
 
-
-;;; Programming Language
 
+;;; Programming Language
 (use-package language-detection
   :ensure t
   :defer t
@@ -4778,7 +4647,7 @@ provides similiar function."
     (message "Language: %s"
              (language-detection-string (buffer-substring b e)))))
 
-
+
 ;;; Emacs
 
 ;; FIXME brew install emacs-mac
@@ -4791,7 +4660,7 @@ provides similiar function."
   :init (add-to-list 'Info-directory-list "~/src/elisp-bytecode")
   :defer t)
 
-
+
 ;;; Chinese | 中文
 
 (use-package mingju
@@ -4813,7 +4682,7 @@ provides similiar function."
 ;; - https://debbugs.gnu.org/cgi/bugreport.cgi?bug=+23412
 
 ;; 临时解决方法，有效但不清楚有没有副作用
-(setq redisplay-dont-pause nil)
+;; (setq redisplay-dont-pause nil)
 
 (use-package opencc
   :ensure t
@@ -4842,7 +4711,7 @@ provides similiar function."
   :load-path "~/src/cc-cedict.el"
   :commands cc-cedict)
 
-
+
 ;;; Fun
 
 (use-package svg-clock
@@ -4949,7 +4818,7 @@ provides similiar function."
      (let (cursor-type)
        (animate-birthday-present user-full-name)))))
 
-
+
 ;;; Utilities
 
 (use-package popup
@@ -5080,7 +4949,7 @@ provides similiar function."
 
       (add-hook 'project-find-functions #'chunyang-elixir-current-project)
 
-      (cl-defmethod project-roots ((project (head elixir)))
+      (cl-defmethod project-root ((project (head elixir)))
         (list (cdr project))))
 
     (use-package cquery
@@ -5132,7 +5001,7 @@ provides similiar function."
   :homepage https://github.com/mhayashi1120/yagist.el
   :defer t)
 
-
+
 ;;; Other Emacs Lisp libraries
 
 ;; dash, seq, thunk, stream, ewoc, cl-lib, widget, tree-widget, let-alist, map
@@ -5197,7 +5066,7 @@ provides similiar function."
   :homepage https://github.com/tkf/emacs-request
   :defer t)
 
-
+
 ;;; Debugger
 
 (use-package gud
@@ -5245,7 +5114,7 @@ _r_: return
   (setq realgud-safe-mode nil)
   (setq realgud:pdb-command-name "python -m pdb"))
 
-
+
 ;;; Custom
 
 ;; All right, enough is enough, ALL themes are safe to me.
@@ -5256,6 +5125,9 @@ _r_: return
 
 ;; 关闭工具栏，tool-bar-mode 即为一个 Minor Mode
 (tool-bar-mode 0)
+(if window-system
+    (tool-bar-mode -1)
+  )
 
 ;; 不显示菜单
 (menu-bar-mode 0)
@@ -5264,7 +5136,7 @@ _r_: return
 (scroll-bar-mode 0)
 
 ;; 显示行号
-(global-linum-mode 1)
+;; (global-linum-mode 1)
 
 ;; 关闭备份
 (setq make-backup-files nil)
@@ -5318,10 +5190,12 @@ _r_: return
 (setq display-time-24hr-format t)
 
 ;; 缩进tab宽度为四个空格，同时设置c代码中语句首字母与括号对齐
-(setq default-tab-width 4)
 (setq-default indent-tabs-mode nil)
-(setq c-default-style "Linux")
+(setq c-syntactic-indentation nil) 
+(setq default-tab-width 4)
+(setq c-default-style "linux")
 (setq c-basic-offset 4)
+;; (c-set-offset 'k&r 0)
 
 ;; -----绑定键------
 ;; 改变Emacs要你回答yes的行为,按y或空格键表示yes，n表示no。 
@@ -5331,37 +5205,41 @@ _r_: return
 
 ;;;分屏
 ;;屏幕大小
-(require 'windresize)
-(global-set-key (kbd "C-c m") 'windresize)
-
-;;可以使用 Ctrl-c ← （就是向左的箭头键）组合键，退回你的上一个窗口设置。）
-;;可以使用 Ctrl-c → （前进一个窗口设置。）
-(when (fboundp 'winner-mode)
-  (winner-mode) 
-  (windmove-default-keybindings)) 
-
+(use-package windresize
+  :ensure t
+  :config
+  (global-set-key (kbd "C-c m") 'windresize)
+  ;;可以使用 Ctrl-c ← （就是向左的箭头键）组合键，退回你的上一个窗口设置。）
+  ;;可以使用 Ctrl-c → （前进一个窗口设置。）
+  (when (fboundp 'winner-mode)
+    (winner-mode)
+    (windmove-default-keybindings))
 ;;;windmove-mode
-(when (fboundp 'windmove-default-keybindings)
-      (windmove-default-keybindings)
+  (when (fboundp 'windmove-default-keybindings)
+    (windmove-default-keybindings)
     (global-set-key (kbd "C-c d")  'windmove-left) 
     (global-set-key (kbd "C-c n") 'windmove-right)
     ;; (global-set-key (kbd "C-c t")    'windmove-up)
     (global-set-key (kbd "C-c h")  'windmove-down))
-;; init.el ends here
-
+  ;; init.el ends here
+  )
 ;; markdown preview
-(setq markdown-command "pandoc")
+(setq markdown-command "pandoc --metadata title=\"iiii\"")
+(setq markdown-css-paths '("/Users/fengshuhao/Dropbox/config/markdown.css"))
 
 (global-set-key (kbd "M-x") 'helm-M-x)
 
 ;; helm-projectile 配置
-(require 'helm-projectile)
+(use-package helm-projectile
+   :ensure t)
 (projectile-global-mode)
 (setq projectile-completion-system'helm)
 (helm-projectile-on)
 ;; 快捷键
 (global-set-key (kbd "C-c p h") 'helm-projectile)
 (global-set-key (kbd "C-c p p") 'helm-projectile-switch-project)
+(global-set-key (kbd "C-c p f") 'helm-projectile-rg)
+
 
 ;; 快速打开配置文件
 (defun open-init-file()
@@ -5371,27 +5249,11 @@ _r_: return
 ;; 这一行代码，将函数 open-init-file 绑定到 <f2> 键上
 (global-set-key (kbd "<f12>") 'open-init-file)
 
-;; java 编译
-(require 'meghanada)
-(add-hook 'java-mode-hook
-          (lambda ()
-            ;; meghanada-mode on
-            (meghanada-mode t)
-            (flycheck-mode +1)
-            (setq c-basic-offset 2)
-            ;; use code format
-            (add-hook 'before-save-hook 'meghanada-code-beautify-before-save)))
-(cond
-   ((eq system-type 'windows-nt)
-    (setq meghanada-java-path (expand-file-name "bin/java.exe" (getenv "JAVA_HOME")))
-    (setq meghanada-maven-path "mvn.cmd"))
-   (t
-    (setq meghanada-java-path "java")
-    (setq meghanada-maven-path "mvn")))
-
-(global-set-key (kbd "C-c C-i") 'yas-insert-snippet)
+(global-set-key (kbd "C-c i") 'yas-insert-snippet)
 
 ;; 英文补全
+;; todo add hook
+;; todo can not use at org mode  -- solution enable company-mode at first
 (require 'company-english-helper)
 (global-set-key (kbd "C-c o a") 'toggle-company-english-helper)
 ;;(setq company-english-helper-fuzz-search-p t)
@@ -5400,6 +5262,7 @@ _r_: return
 (add-hook 'org-mode-hook 'toggle-truncate-lines)
 
 ;; 中英文等宽
+(defun s-font ()
 (set-face-attribute
  'default nil
  :font (font-spec :name "-*-Monaco-normal-normal-normal-*-*-*-*-*-m-0-iso10646-1"
@@ -5410,10 +5273,20 @@ _r_: return
   (set-fontset-font
    (frame-parameter nil 'font)
    charset
-   (font-spec :name "-*-Hiragino Sans GB-normal-normal-normal-*-*-*-*-*-p-0-iso10646-1"
+   (font-spec :name "-*-Source Han Serif-normal-normal-normal-*-*-*-*-*-p-0-iso10646-1"
               :weight 'normal
               :slant 'normal
               :size 14.5)))
+)
+
+(add-to-list 'after-make-frame-functions
+             (lambda (new-frame)
+               (select-frame new-frame)
+               (if window-system
+                   (s-font))))
+(if window-system
+    (s-font))
+
 ;;(require 'cnfonts)
 ;; 让 cnfonts 随着 Emacs 自动生效。
 ;; (cnfonts-enable)
@@ -5430,11 +5303,94 @@ _r_: return
 (global-set-key (kbd "M-B") 'helm-bookmarks)
 
 ;; ace-jump-mode
-(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
+(use-package ace-jump-mode
+  :ensure t
+  :bind ("M-p" . ace-jump-mode))
+
+;; sqlbeatiful
+(defun sql-beautify-region (beg end)
+  "Beautify SQL in region between beg and END."
+  (interactive "r")
+  (save-excursion
+    (shell-command-on-region beg end "beautify-sql" nil t)))
+    ;; change sqlbeautify to anbt-sql-formatter if you
+    ;;ended up using the ruby gem
+
+(defun sql-beautify-buffer ()
+ "Beautify SQL in buffer."
+ (interactive)
+ (sql-beautify-region (point-min) (point-max)))
+
+(defun sql-beautify-region-or-buffer ()
+  "Beautify SQL for the entire buffer or the marked region between beg and end"
+  (interactive)
+  (if (use-region-p)
+      (sql-beautify-region (region-beginning) (region-end))
+    (sql-beautify-buffer)))
+
+(add-hook 'sql-mode-hook '(lambda ()                                                                               
+  ;; beautify region or buffer                                                           
+  (local-set-key (kbd "C-M-]") 'sql-beautify-region-or-buffer))) 
+;; end sqlbeatiful
 
 ;; 可以删除选中
 (delete-selection-mode 1)
 
+;; 按C-z可以选中当前行，继续按C-z就继续选下一行。
+(defun yp-mark-line (&optional arg)
+  (interactive "P")
+  (if (region-active-p)
+      (progn
+        (goto-char (line-end-position 2)))
+    (progn
+      (back-to-indentation)
+      (set-mark (point))
+      (goto-char (line-end-position))))
+  (setq arg (if arg (prefix-numeric-value arg)
+              (if (< (mark) (point)) -1 1)))
+  (if (and arg (> arg 1))
+      (progn
+        (goto-char (line-end-position arg)))))
+
+;; 把它绑定到C-z上面：
+(global-set-key (kbd "C-c w") 'yp-mark-line)
+
+;; 如果当前有选中区域就和默认的复制/剪切一样，如果没有选中区域，就复制/剪切当前行，这三个函数都可以接收C-u number做为数字参数，传入数字几就操作几行。
+;; 我在这三个函数中都使用back-to-indentation来移动到行首，可以把行首的空白排除在外，不喜欢的话可以改成move-beginning-of-line.
+;; http://m.newsmth.net/article/Emacs/104019
+(defun yp-copy (&optional arg)
+  "switch action by whether mark is active"
+  (interactive "P")
+  (if mark-active
+      (kill-ring-save (region-beginning) (region-end))
+    (let ((beg (progn (back-to-indentation) (point))) 
+          (end (line-end-position arg)))
+      (copy-region-as-kill beg end))))
+
+(defun yp-kill (&optional arg)
+  "switch action by whether mark is active"
+  (interactive "P")
+  (if mark-active
+      (kill-region (region-beginning) (region-end))
+    (kill-whole-line arg)))
+
+(defun my-kill-word (arg)
+  "Kill characters forward until encountering the end of a word.
+With argument ARG, do this that many times."
+  (interactive "p")
+  (kill-region (progn (backward-word) (point)) (progn (forward-word arg) (point))))
+
+(global-set-key (kbd "M-d") 'my-kill-word)
+(global-set-key (kbd "M-w") 'yp-copy)
+(global-set-key (kbd "C-w") 'yp-kill)
+
+
+;; 自动更新包
+;;(use-package auto-package-update
+;;  :config
+;;  (setq auto-package-update-delete-old-versions t)
+;;  (setq auto-package-update-hide-results t)
+;;  (auto-package-update-maybe))
 ;;; init.el ends here
 
 ;; Local Variables:
@@ -5442,3 +5398,277 @@ _r_: return
 ;; bug-reference-bug-regexp: "bug#\\(?2:[0-9]+\\)"
 ;; eval: (bug-reference-prog-mode)
 ;; End:
+
+;; org-mode 設定
+(require 'org-crypt)
+
+;; 當被加密的部份要存入硬碟時，自動加密回去
+(org-crypt-use-before-save-magic)
+
+;; 設定要加密的 tag 標籤為 secret
+(setq org-crypt-tag-matcher "secret")
+
+;; 避免 secret 這個 tag 被子項目繼承 造成重複加密
+;; (但是子項目還是會被加密喔)
+(setq org-tags-exclude-from-inheritance (quote ("secret")))
+
+;; 用於加密的 GPG 金鑰
+;; 可以設定任何 ID 或是設成 nil 來使用對稱式加密 (symmetric encryption)
+(setq org-crypt-key nil)
+
+;; (setq auto-save-default nil)
+;; Auto-saving does not cooperate with org-crypt.el: so you need
+;; to turn it off if you plan to use org-crypt.el quite often.
+;; Otherwise, you'll get an (annoying) message each time you
+;; start Org.
+;; To turn it off only locally, you can insert this:
+;;
+;; # -*- buffer-auto-save-file-name: nil; -*-
+
+;; 绑定快捷键 C-x C-.
+(add-hook 'org-mode-hook
+          (lambda ()
+            (local-set-key [24 67108910] 'org-decrypt-entry)))
+
+;; always show line numbers  
+;;(global-linum-mode 1)
+
+(setq org-plantuml-jar-path (expand-file-name "/Users/fengshuhao/.emacs.d/jar/plantuml.jar"))
+;;(use-package plantuml-mode  :ensure t)
+;; Sample jar configuration
+;;(setq plantuml-jar-path "/Users/fengshuhao/.emacs.d/jar/plantuml.jar")
+;;(setq plantuml-default-exec-mode 'jar)
+
+;; Enable plantuml-mode for PlantUML files
+(add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
+
+(defun xah-open-in-safari ()
+  "Open the current file or `dired' marked files in Mac's Safari browser.
+
+If the file is not saved, save it first.
+
+URL `http://ergoemacs.org/emacs/emacs_dired_open_file_in_ext_apps.html'
+Version 2018-02-26"
+  (interactive)
+  (let* (
+         ($file-list
+          (if (string-equal major-mode "dired-mode")
+              (dired-get-marked-files)
+            (list (buffer-file-name))))
+         ($do-it-p (if (<= (length $file-list) 5)
+                       t
+                     (y-or-n-p "Open more than 5 files? "))))
+    (when $do-it-p
+      (cond
+       ((string-equal system-type "darwin")
+        (mapc
+         (lambda ($fpath)
+           (when (buffer-modified-p )
+             (save-buffer))
+           (shell-command
+            (format "open -a Safari.app \"%s\"" $fpath))) $file-list))))))
+
+
+;;C-M-\缩进
+
+;;a batter function for indent
+(defun indent-buffer()
+(interactive)
+(indent-region(point-min) (point-max)))
+ 
+(defun indent-region-or-buffer()
+(interactive)
+(save-excursion
+(if(region-active-p)
+(progn
+(indent-region(region-beginning) (region-end))
+(message"Indent selected region."))
+(progn 
+(indent-buffer)
+(message"Indent buffer.")))))
+;;;;Key binding for this better indent function
+(global-set-key(kbd "C-M-\\") 'indent-region-or-buffer)
+
+;;多行缩进
+(defun shift-region (distance)
+(interactive "nHow many: ")
+(let ((mark (mark)))
+(save-excursion
+(indent-rigidly (region-beginning) (region-end) distance)
+(push-mark mark t t)
+(setq deactivate-mark nil))))
+(global-set-key(kbd "C-|") 'shift-region)
+
+;; goto last change c-. c-,
+(use-package goto-chg
+ :ensure t
+  )
+(global-set-key [(control ?.)] 'goto-last-change)
+(global-set-key [(control ?,)] 'goto-last-change-reverse)
+
+;; 把滚动和粘贴换一下
+(define-key org-mode-map (kbd "C-y") 'scroll-up-command)
+
+(global-set-key (kbd "C-y") 'scroll-up-command)
+
+(global-set-key (kbd "C-v") 'counsel-yank-pop)
+
+(global-set-key (kbd "M-y") 'scroll-down-command)
+(global-set-key (kbd "C-M-y") 'scroll-other-window)
+(global-set-key (kbd "C-M-S-y") 'scroll-other-window-down)
+
+;; 目录
+(global-set-key (kbd "C-x C-f") #'helm-find-files)
+(global-set-key (kbd "M-v") 'org-yank)
+
+;; commonLisp
+(setq inferior-lisp-program "/usr/local/Cellar/sbcl/1.5.7/bin/sbcl")
+
+(define-key org-mode-map (kbd "C-c C-y") 'yas-insert-snippet)
+
+;; 自动去掉行尾的^M 为什么用不了呢?
+;; (defun clean-line-suffix()    (replace-string C-q C-m))
+(defun delete-carrage-returns ()
+  (interactive)
+  (save-excursion
+    (goto-char 0)
+    (while (search-forward "\r" nil :noerror)
+      (replace-match ""))))
+
+;; auto-save
+(require 'auto-save)            ;; 加载自动保存模块
+
+(auto-save-enable)              ;; 开启自动保存功能
+(setq auto-save-slient t)       ;; 自动保存的时候静悄悄的， 不要打扰我
+
+;; flyspell
+;; ispell 看错误的地方 -> i 可以把插入自定义字典
+;; todo 个人字典不知道在哪里
+;; (dolist (hook '(text-mode-hook org-mode-hook))
+;;   (add-hook hook (lambda () (flyspell-mode 1))))
+;; (dolist (hook '(change-log-mode-hook log-edit-mode-hook))
+;;   (add-hook hook (lambda () (flyspell-mode -1))))
+;; performance
+;; (setq flyspell-issue-message-flag nil)
+
+
+;;; Spelling and syntax checking
+
+(use-package flyspell
+  :init
+  ;; (add-hook 'text-mode-hook #'flyspell-mode)
+  ;; (add-hook 'prog-mode-hook #'flyspell-prog-mode)
+  ;; Magit commit message
+  (add-hook 'git-commit-mode-hook #'flyspell-mode)
+  ;; VC commit message
+  (add-hook 'log-edit-mode-hook #'flyspell-mode)
+  ;; Email
+  (add-hook 'message-mode-hook #'flyspell-mode)
+  ;; org
+  (add-hook 'org-mode-hook #'flyspell-mode)
+  (use-package ispell
+    :defer t
+    :init
+    (setq ispell-program-name "aspell"
+          ispell-extra-args
+          '("--sug-mode=fast"
+            ;; NOTE 我把 macOS 改成了中文语言，然后 Emacs:
+            ;;
+            ;; (getenv "LANG")
+            ;; ;; => "zh-Hans_US.UTF-8"
+            ;;
+            ;; 导致 Aspell 试图找 zh 语言的字典，遂失败
+            "--lang=en_US"
+            ;; force the English dictionary, support Camel Case spelling check (tested with aspell 0.6)
+            "--run-together")))
+  :bind ("C-c t s" . flyspell-mode)
+  :config
+  (unbind-key "C-."   flyspell-mode-map)
+  (unbind-key "C-M-i" flyspell-mode-map)
+  (unbind-key "C-;"   flyspell-mode-map)
+  (use-package flyspell-popup
+    :ensure t
+    :config
+    (bind-key "C-." #'flyspell-popup-correct flyspell-mode-map)
+    (add-hook 'flyspell-mode-hook #'flyspell-popup-auto-correct-mode)))
+
+
+;; (require 'auto-change-theme)
+;; (run-with-timer 0 1800 'my-auto-change-theme)
+
+;;emacs-plus
+;;(add-hook 'ns-system-appearance-change-functions
+;;          #'(lambda (appearance)
+;;              (mapc #'disable-theme custom-enabled-themes)
+;;              (pcase appearance
+;;                ('light (load-theme 'solarized-light t))
+;;                ('dark (load-theme 'solarized-dark t)))))
+;;
+
+;; hide titlebar
+(setq frame-resize-pixelwise t)
+
+;;  (add-to-list 'default-frame-alist '(ns-appearance . dark))
+(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+(add-to-list 'default-frame-alist '(ns-appearance . light))
+
+
+;; (use-package company-tern
+;;   :ensure t
+;;   :after (company tern)
+;;   :homepage https://github.com/proofit404/company-tern
+;;   :init (add-to-list 'company-backends 'company-tern)
+;;   :defer t)
+
+;; xwidget
+;; Use xwidget-webkit-browse-url as the browse-url
+;; (setq browse-url-browser-function 'xwidget-webkit-browse-url)
+
+;; search-web with xwidget webkit
+;;(require 'search-web)
+;;(global-set-key (kbd "C-c w") 'search-web)
+;; (defun browse-url-default-browser (url &rest args)
+;;   "Override `browse-url-default-browser' to use `xwidget-webkit' URL ARGS."
+;;   (xwidget-webkit-browse-url url args))
+
+;; Browse to a URL bookmark from *Bookmark List*
+;; (defvar xwidget-webkit-bookmark-jump-new-session) ;; xwidget.el
+;; (defvar xwidget-webkit-last-session-buffer) ;; xwidget.el
+;; (add-hook 'pre-command-hook
+;;           (lambda ()
+;;             (if (eq this-command #'bookmark-bmenu-list)
+;;                 (if (not (eq major-mode 'xwidget-webkit-mode))
+;;                     (setq xwidget-webkit-bookmark-jump-new-session t)
+;;                   (setq xwidget-webkit-bookmark-jump-new-session nil)
+;;                   4(setq xwidget-webkit-last-session-buffer (current-buffer))))))
+
+;; end emacs-plus
+
+;;org hide title stars
+(setq org-startup-indented t)
+
+(require 'shuhao-diff)          ;; 比较两个文本功能
+(require 'shuhao-util)          ;; 一些小功能
+
+;; 番茄种 https://github.com/marcinkoziej/org-pomodoro
+(use-package org-pomodoro
+   :ensure t)
+
+;; 日历
+(use-package cal-china-x
+  :ensure t
+  :config
+  (setq mark-holidays-in-calendar t)
+  (setq cal-china-x-important-holidays cal-china-x-chinese-holidays)
+  (setq cal-china-x-general-holidays '((holiday-lunar 1 15 "元宵节")))
+  (setq calendar-holidays
+        (append cal-china-x-important-holidays
+                cal-china-x-general-holidays
+                )))
+
+;; 折叠插件
+(use-package yafolding
+  :ensure t
+  :config)
+(use-package discover
+   :ensure t)
