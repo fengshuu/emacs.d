@@ -3623,7 +3623,7 @@ Adapt from `org-babel-remove-result'."
   
   (setq org-directory "~/Dropbox/feng/gtd/")
   (setq org-capture-templates
-  `(("t" "Todo" entry (file+headline "~/Dropbox/feng/gtd/task.org" "Tasks")
+  `(("t" "Todo" entry (file "~/Dropbox/feng/gtd/task.org")
          "* TODO %^{Brief Description} %^g\n%?Added: %U" 
          :empty-lines 1)
     ("j" "Journal" entry (file+headline "~/Dropbox/feng/gtd/journal.org" ,(format-time-string "%b %Y" (current-time)))
@@ -5434,14 +5434,13 @@ With argument ARG, do this that many times."
 ;;(global-linum-mode 1)
 
 (setq org-plantuml-jar-path (expand-file-name "~/.emacs.d/jar/plantuml.jar"))
-(use-package plantuml-mode  :ensure t
-  :config (bind-key "C-c C-c" #'plantuml-preview-current-block org-mode-map))
+;;(use-package plantuml-mode  :ensure t  :config (bind-key "C-c C-c" #'plantuml-preview-current-block org-mode-map))
 ;; Sample jar configuration
-(setq plantuml-jar-path "/Users/fengshuhao/.emacs.d/jar/plantuml.jar")
-(setq plantuml-default-exec-mode 'jar)
+;;(setq plantuml-jar-path "/Users/fengshuhao/.emacs.d/jar/plantuml.jar")
+;;(setq plantuml-default-exec-mode 'jar)
 
 ;; Enable plantuml-mode for PlantUML files
-(add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
+;;(add-to-list 'auto-mode-alist '("\\.plantuml\\'" . plantuml-mode))
 
 (defun xah-open-in-safari ()
   "Open the current file or `dired' marked files in Mac's Safari browser.
