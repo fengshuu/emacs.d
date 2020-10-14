@@ -41,7 +41,11 @@
         ;; 设置当前代码的 buffer 为 buf 变量值， 如果没有前面 save-excursion, 你会发现emacs会一直在快速的切换所有 buffer 的过程
         (set-buffer buf)
         ;; 如果当前 buffer 有一个相关联文件 (buffer-file-name), 同时当前 buffer 已经被用户修改了 (buffer-modified-p) 的情况下就执行自动保存
+<<<<<<< HEAD
         (if (and (buffer-file-name) (buffer-modified-p) (not (string-match "secret.org\\'" (buffer-file-name))))
+=======
+        (if (and (buffer-file-name) (buffer-modified-p))
+>>>>>>> cc1498af907015b90c72adc5647edff02620fd1c
             (progn
               ;; 把当前 buffer 的名字压进 autosave-buffer-list 列表， 用于后面的保存提示
               (push (buffer-name) autosave-buffer-list)

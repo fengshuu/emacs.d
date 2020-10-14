@@ -3643,1484 +3643,1483 @@ Adapt from `org-babel-remove-result'."
         ;;  :empty-lines 1
         ;;  :immediate-finish t)
         ))
-  
+
   (setq org-default-notes-file (concat org-directory "/task.org"))
-    
-;; setting up capture
-(put 'upcase-region 'disabled nil)
-(put 'downcase-region 'disabled nil)
 
-(setq org-agenda-time-grid '((daily today require-timed)
- (600 700 800 900 1000 1100 1200 1300 1400 1500 1600 1700 1800 1900 2000 2100 2200 2300)
- "......" "----------------"))
+  ;; setting up capture
+  (put 'upcase-region 'disabled nil)
+  (put 'downcase-region 'disabled nil)
 
-(setq org-refile-targets (quote (("task.org" :maxlevel . 1) 
-                              ("someday.org" :level . 2))))
+  (setq org-agenda-time-grid '((daily today require-timed)
+                               (600 700 800 900 1000 1100 1200 1300 1400 1500 1600 1700 1800 1900 2000 2100 2200 2300)
+                               "......" "----------------"))
 
-(setq org-agenda-custom-commands
-     '(("h" "Office and Home Lists"
-         ((agenda)
-          (tags-todo "OFFICE")
-          (tags-todo "HOME")))
-        ("d" "Daily Action List"
-         ((agenda "" ((org-agenda-ndays 1)
-                      (org-agenda-sorting-strategy
-                       (quote ((agenda time-up priority-down tag-up) )))
-                       (org-deadline-warning-days 0)
-                       ))))))
+  (setq org-refile-targets (quote (("task.org" :maxlevel . 1) 
+                                   ("someday.org" :level . 2))))
 
-;; set variables
-(setq org-agenda-todo-list-sublevels t)
-(setq org-todo-keywords
-     '((sequence "TODO(t)" "STARTED(s)" "WAITING(w)" "|" "DONE(d@/!)" "CANCELED(c@/!)")
-  ))
+  (setq org-agenda-custom-commands
+        '(("h" "Office and Home Lists"
+           ((agenda)
+            (tags-todo "OFFICE")
+            (tags-todo "HOME")))
+          ("d" "Daily Action List"
+           ((agenda "" ((org-agenda-ndays 1)
+                        (org-agenda-sorting-strategy
+                          (quote ((agenda time-up priority-down tag-up) )))
+                        (org-deadline-warning-days 0)
+                        ))))))
+
+  ;; set variables
+  (setq org-agenda-todo-list-sublevels t)
+  (setq org-todo-keywords
+        '((sequence "TODO(t)" "STARTED(s)" "WAITING(w)" "|" "DONE(d@/!)" "CANCELED(c@/!)")
+          ))
   ;; todo 归档
   (defun org-archive-done-tasks ()
-  (interactive)
-  (org-map-entries
-   (lambda ()
-     (let ((org-archive-location "archive::* CANCEL"))
-       (org-archive-subtree))
-     (setq org-map-continue-from (outline-previous-heading));;跳到指定地方
-   )
-   "/CANCELED";;执行范围
-   'file;;执行范围
-   )
-   (org-map-entries
-    (lambda ()
-    (let ((org-archive-location "archive::* DOWN"))
-       (org-archive-subtree))
-     (setq org-map-continue-from (outline-previous-heading));;跳到指定地方
-   )
-   "/DONE";;执行范围
-   'file;;执行范围
-   )
-  )
-
-  
-  (setq org-agenda-restore-windows-after-quit t)
-
-  (defun chunyang-org-capture ()
     (interactive)
-    (let* ((input
-            (completing-read
-             "org capture template:"
-             (mapcar
-              (lambda (template)
-                (format "%s %s" (car template) (cadr template)))
-              org-capture-templates)))
-           (keys (car (split-string input))))
-      (org-capture nil keys)))
-
-  (add-hook 'org-agenda-mode-hook #'hl-line-mode)
-
-  ;; Support link to Manpage, EWW and Notmuch
- (require 'org-man nil 'noerror)
- ;;(require 'org-eww)
- (require 'org-notmuch nil 'noerror)
-
-  (use-package ob-lisp                  ; Common Lisp
-    :defer t
-    :config
-    ;; Requires SLY or SLIME, and the latter is used by default
-    (setq org-babel-lisp-eval-fn 'sly-eval))
-
-  (use-package ob-ipython
-    ;; XXX org-capture: Capture abort: (json-readtable-error 47)
-    ;; 作者假设 jupyter 正常运行，不好
-    :disabled
-    :homepage https://github.com/gregsexton/ob-ipython
-    :ensure t
-    ;; :config
-    ;; (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-    :defer t)
-
-;;  (use-package ob-racket
-;;    :homepage https://github.com/DEADB17/ob-racket
-;;    :load-path "~/src/ob-racket"
-;;    :config
-;;    (add-to-list 'org-src-lang-modes (cons "racket" 'scheme)))
-
-  (add-to-list 'org-src-lang-modes '(("js" . js2)
-                                     ("plantuml" . plantuml)))
-  
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((awk        . t)
-     (clojure    . t)
-     (C          . t)
-     (ditaa      . t)
-     (emacs-lisp . t)
-     (eshell     . t)
-     (latex      . t)
-     (lisp       . t)
-     (lua        . t)
-     (org        . t)
-     (perl       . t)
-     (python     . t)
-     (plantuml   . t)
-     (R          . t)
-;;     (racket     . t)
-     (ruby       . t)
-     (scheme     . t)
-     (shell      . t)))
-
-  ;; Work-around for
-  ;; http://lists.gnu.org/archive/html/emacs-orgmode/2018-03/msg00013.html
-  (define-advice org-babel-expand-body:clojure (:filter-return (body) do)
-    (format "(do %s)" body))
-
-  ;; This is not safe
-  (setq org-confirm-babel-evaluate nil)
-
-  ;; Upcase #+begin_example...#+end_example in the results
-  (setq org-babel-uppercase-example-markers t)
-
-  ;; Highlight the result of source block
-  (add-hook 'org-babel-after-execute-hook
-            (defun chunyang-org-babel-highlight-result-maybe ()
-              (when (eq this-command 'org-ctrl-c-ctrl-c)
-                (chunyang-org-babel-highlight-result))))
-
-  (define-advice org-babel-eval-wipe-error-buffer (:override () kill-buffer)
-    "Just kill the buffer since the buffer/window is useless and annoying."
-    (when (get-buffer org-babel-error-buffer-name)
-      (kill-buffer org-babel-error-buffer-name)))
-
-  ;; Or use C-c C-v C-x (`org-babel-do-key-sequence-in-edit-buffer') instead
-  (bind-key "C-h S" #'chunyang-org-info-lookup-symbol org-mode-map)
-
-  ;; [[https://emacs-china.org/t/topic/4540][rg搜索文字并跳转后如何自动展开上下文？ - Spacemacs - Emacs China]]
-  (add-hook 'next-error-hook
-            (defun chunyang-org-reveal-after-next-error ()
-              (and (derived-mode-p 'org-mode) (org-reveal))))
-
-  ;; https://emacs-china.org/t/topic/5494
-  (setq org-protocol-protocol-alist
-        '(("bookmark"
-           :protocol "bookmark"
-           :function chunyang-org-protocol-capture-bookmark)))
-
-  (defun chunyang-org-protocol-capture-bookmark (_info)
-    (org-capture nil "b")
-    ;; Only needed for Mac Port's builtin protocol support
-    (when *is-mac-port*
-      (run-at-time 0 nil #'chunyang-mac-switch-back-to-previous-application))
-    nil)
-
-  (defun chunyang-mac-switch-back-to-previous-application ()
-    (interactive)
-    ;; http://blog.viktorkelemen.com/2011/07/switching-back-to-previous-application.html
-    (do-applescript
-     (mapconcat
-      #'identity
-      '("tell application \"System Events\""
-        "  tell process \"Finder\""
-        "    activate"
-        "    keystroke tab using {command down}"
-        "  end tell"
-        "end tell")
-      "\n")))
-
-  ;; $ emacsclient 'org-protocol://bookmark?'
-  (require 'org-protocol)
-  (require 'org-habit))
-
-(use-package ox-html
-  :defer t)
-
-(use-package chunyang-org
-  :commands (chunyang-org-agenda-csv
-             helm-org-easy-templates
-             chunyang-org-format-region-as-code-block
-             chunyang-org-preview-via-pandoc
-             chunyang-org-babel-tangle))
-
-(use-package toc-org
-  :homepage https://github.com/snosov1/toc-org
-  :notes "Add TOC tag to a heading then 'M-x toc-org-insert-toc'"
-  :ensure t
-  :defer t)
-
-(use-package grab-mac-link
-  :if *is-mac*
-  :load-path "~/src/grab-mac-link"
-  :ensure t
-  :commands (grab-mac-link grab-mac-link-dwim)
-  :config (setq grab-mac-link-dwim-favourite-app 'chrome))
-
-(use-package htmlize                    ; Enable src block syntax
-                                        ; highlightting during
-                                        ; exporting from org to html
-  :ensure t
-  :defer t)
-
-(use-package orglink
-  :disabled t
-  :ensure t
-  :preface
-  ;; XXX To fix "funcall-interactively: Text is read-only" error, when
-  ;; entering pattern after M-x el-search-pattern
-  (defun chunyang-orglink-turn-on-maybe ()
-    (unless (minibufferp)
-      (orglink-mode)))
-  :defer t
-  :init (add-hook 'prog-mode-hook #'chunyang-orglink-turn-on-maybe)
-  :config (setq orglink-mode-lighter nil))
-
-;; TODO: Learn more about this package
-(use-package org-board                  ; Bookmark with Org
-  :ensure t
-  :defer t)
-
-(use-package habitica
-  :disabled t
-  :ensure t
-  :defer t)
-
-
-;;; C
-
-;; C Programming Tools:
-;; - GDB (info "(gdb) Top")
-;; - GCC (info "(gcc) Top")
-;; - CC Mode (info "(ccmode) Top")
-;;
-;; Note that it's not easy to use GDB on macOS (blame Apple).
-
-(use-package cc-mode
-  ;; Tips:
-  ;; - C-M-a/e and M-a/e understands functions and statements, it's cool
-  :defer t
-  :init
-  ;; Turn on Auto-newline and hungry-delete-key, they are adviced by cc-mode
-  ;; manual, let me try them for a while. BTW, 'a' and 'h' will be indicated in
-  ;; the mode-line, such as C/lah.  BTW, 'l' stands for electric keys, use C-c
-  ;; C-l to toggle it.
-  ;; (add-hook 'c-mode-common-hook #'c-toggle-auto-hungry-state)
-
-  (defun chunyang-c-mode-common-setup ()
-    (abbrev-mode -1))
-
-  (add-hook 'c-mode-common-hook #'chunyang-c-mode-common-setup)
-
-  (defun chunyang-cpp-lookup ()
-    "Lookup C function/macro/etc prototype via Preprocessing."
-    (interactive)
-    (let ((symbol (current-word))
-          (buffer "*clang-cpp-output*")
-          (file buffer-file-name))
-      (with-current-buffer (get-buffer-create buffer)
-        (erase-buffer)
-        (call-process "cc" nil t nil "-E" file)
-        (goto-char (point-min))
-        (re-search-forward symbol nil t)
-        (display-buffer (current-buffer)))))
-  :config
-  ;; Really need a key binding for reporting bug? M-x `c-submit-bug-report'
-  (unbind-key "C-c C-b" c-mode-map)
-  ;; C/*lah => C
-  (advice-add 'c-update-modeline :around #'ignore)
-
-  ;; Add imenu support for section comment like this
-  ;; /*** includes ***/
-  (add-to-list
-   'cc-imenu-c-generic-expression
-   (list "Section"
-         (rx line-start "/***" (group (1+ not-newline)) "***/" line-end)
-         1)))
-
-(use-package irony
-  :disabled t
-  :ensure t
-  :defer t
-  :init
-  (add-hook 'c-mode-hook #'irony-mode)
-
-  ;; replace the `completion-at-point' and `complete-symbol' bindings in
-  ;; irony-mode's buffers by irony-mode's function
-  (defun my-irony-mode-hook ()
-    (bind-key
-     [remap completion-at-point]
-     #'irony-completion-at-point-async
-     irony-mode-map)
-    (bind-key
-     [remap complete-symbol]
-     #'irony-completion-at-point-async
-     irony-mode-map))
-  (add-hook 'irony-mode-hook #'my-irony-mode-hook)
-  (add-hook 'irony-mode-hook #'irony-cdb-autosetup-compile-options)
-
-  :config
-  (use-package company-irony
-    :ensure t
-    :defer t
-    :init (with-eval-after-load 'company
-            (add-to-list 'company-backends 'company-irony))
-    :config
-    ;; Prefer "fun ()" over "fun()"
-    (define-advice company-irony--post-completion
-        (:override (candidate) put-space-open-parentheses-maybe)
-      "Add one space before open-parenthesis if using GNU style."
-      (when (and (equal c-indentation-style "gnu")
-                 candidate)
-        (let ((point-before-post-complete (point)))
-          (if (irony-snippet-available-p)
-              (irony-completion-post-complete candidate)
-            (let ((str (irony-completion-post-comp-str candidate)))
-              ;; Prefer GNU C style by adding one space after function
-              ;; name (2016-10-24 by xcy)
-              (unless (string-empty-p str)
-                (insert " "))
-              (insert str)
-              (company-template-c-like-templatify str)))
-          (unless (eq (point) point-before-post-complete)
-            (setq this-command 'self-insert-command))))))
-
-  (use-package irony-eldoc        ; Note: this does not work very well
-    :ensure t
-    :defer t
-    :init (add-hook 'irony-mode-hook #'irony-eldoc)))
-
-(use-package flycheck-irony
-  :ensure t
-  :after irony
-  :config
-  (eval-after-load 'flycheck
-    '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup)))
-
-
-;;; Rust
-
-(use-package rust-mode
-  :ensure t
-  :defer t)
-
-(use-package racer
-  :ensure t
-  :homepage https://github.com/racer-rust/emacs-racer
-  :notes
-  - $ cargo install racer
-  :after rust-mode
-  :config
-  (add-hook 'rust-mode-hook #'racer-mode)
-  (add-hook 'racer-mode-hook #'eldoc-mode))
-
-(use-package flycheck-rust     ; The built-in check of Flycheck not working well
-  :ensure t
-  :defer t
-  :after flycheck
-  :config
-  (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
-
-(use-package ob-rust
-  :homepage https://travis-ci.org/micanzhang/ob-rust
-  :ensure t
-  :after org)
-
-(use-package toml-mode
-  :ensure t
-  :defer t)
-
-
-;;; Common Lisp
-
-(use-package slime
-  :disabled t
-  :ensure t
-  :defer t
-  :init (setq inferior-lisp-program "sbcl"))
-
-;; TODO eldoc support (`sly-autodoc-mode') is not working
-;; TODO Is completion working? (best with Company support, usually it should work out of box)
-(use-package sly
-  :disabled t   ; Since I don't write Common Lisp and this package updates a lot
-  :ensure t
-  :defer t
-  :preface
-  (defun chunyang-sly-eval-print-last-sexp ()
-    "Like `chunyang-eval-print-last-sexp' in Emacs Lisp.
-Note that `sly-eval-last-expression' with prefix argument
-provides similiar function."
-    (interactive)
-    (let ((string (sly-last-expression)))
-      (sly-eval-async `(slynk:eval-and-grab-output ,string)
-        (lambda (result)
-          (cl-destructuring-bind (_output value) result
-            (unless (chunyang-current-line-empty-p) (insert ?\n))
-            ;; (insert "     ⇒ " value)
-            (insert "     => " value)
-            (unless (chunyang-current-line-empty-p) (insert ?\n)))))))
-
-  (defun chunyang-sly-eval-print-last-sexp-in-comment ()
-    (interactive)
-    (let ((string (sly-last-expression)))
-      (sly-eval-async `(slynk:eval-and-grab-output ,string)
-        (lambda (result)
-          (cl-destructuring-bind (_output value) result
-            (comment-dwim nil)
-            (insert (format " => %s" value)))))))
-  :config
-  (setq inferior-lisp-program "sbcl")
-  (bind-key "C-j" #'chunyang-sly-eval-print-last-sexp sly-mode-map)
-  (bind-key "C-j" #'chunyang-sly-eval-print-last-sexp-in-comment sly-mode-map))
-
-(use-package sly-mrepl
-  :no-require t                      ; Silence byte-compiling warnning
-  :defer t
-  :config
-  ;; Enable Paredit in REPL too
-  (add-hook 'sly-mrepl-mode-hook #'paredit-mode))
-
-
-;;; newLISP <http://www.newlisp.org/>
-
-(use-package newlisp-mode
-  :ensure t
-  :homepage https://github.com/kosh04/newlisp-mode
-  :defer t)
-
-
-;;; Ruby
-
-(use-package ruby-mode
-  :defer t
-  :init
-  (add-hook 'ruby-mode-hook #'superword-mode))
-
-(use-package inf-ruby
-  :ensure t
-  ;; `package.el' does the setup via autoload
-  :defer t)
-
-(use-package robe
-  ;; NOTE: Some gems have to be installed before using, see
-  ;;       https://github.com/dgutov/robe
-  :ensure t
-  :after ruby-mode
-  :config
-  (add-hook 'ruby-mode-hook #'robe-mode))
-
-(use-package ruby-tools
-  :disabled t
-  :ensure t
-  :defer t
-  :init (add-hook 'ruby-mode-hook #'ruby-tools-mode))
-
-
-;;; Standard ML
-
-(use-package sml-mode
-  :ensure t
-  :defer t)
-
-(use-package sml-eldoc
-  :disabled t                           ; Not working
-  :commands sml-eldoc-turn-on
-  :init (add-hook 'sml-mode-hook #'sml-eldoc-turn-on))
-
-(use-package ob-sml
-  :ensure t
-  :after org)
-
-
-;;; Scheme
-
-(use-package geiser                     ; For Scheme
-  :disabled
-  :ensure t
-  :defer t
-  :defines geiser-mode-map
-  :preface
-  (defun chunyang-geiser-eval-print-last-sexp ()
-    (interactive)
-    (let ((message-log-max nil))
-      ;; FIXME: Handle error correctly like C-u M-x `geiser-eval-last-sexp'
-      (let ((res (geiser-eval-last-sexp nil)))
-        (unless (string= "=> " res)
-          (unless (bolp) (insert "\n"))
-          (insert
-           ";; "
-           ;; Handle Multiple Values
-           (replace-regexp-in-string "\n=>" "\n;; =>" res)
-           "\n")
-          (message nil)))))
-
-  (defun chunyang-geiser-expand-sexp-at-point (&optional all)
-    (interactive "P")
-    (geiser-expand-region (point)
-                          (save-excursion (forward-sexp) (point))
-                          all
-                          t))
-
-  ;; Important keys:
-  ;; C-c C-z - Switch between source and REPL
-  ;; C-z C-a - Switch to REPL with current module
-  (defun chunyang-geiser-setup ()
-    (bind-keys :map geiser-mode-map
-               ("C-h ."   . geiser-doc-symbol-at-point)
-               ("C-h C-." . geiser-doc-look-up-manual)
-               ("C-j"     . chunyang-geiser-eval-print-last-sexp)
-               ("C-c e"   . chunyang-geiser-expand-sexp-at-point)))
-  :config
-  ;; To learn how Geiser chooses Scheme implementation,
-  ;; see (info "(geiser) The source and the REPL")
-  ;; (setq geiser-active-implementations '(racket chicken))
-
-  ;; XXX With scheme src block in Org, `scheme-mode' is called from time to
-  ;; time, then `geiser-mode' is called, but it can't figure out the scheme
-  ;; implementation.
-  ;;
-  ;; 1. In the Org mode, there is no need to enable `geiser-mode'.
-  ;; 2. In C-c ' (`org-src-mode'), `geiser-mode' should be on and with correct
-  ;;    scheme implementation.
-  ;;
-  ;; Ok, for now, just use the fallback.
-  (setq geiser-default-implementation 'racket)
-
-  (add-hook 'geiser-mode-hook #'chunyang-geiser-setup)
-
-  ;; Yes, use ParEdit in the REPL too
-  (add-hook 'geiser-repl-mode-hook #'paredit-mode)
-
-  ;; (info "(geiser) Seeing is believing")
-  (and *is-mac* (setq geiser-image-viewer "open")))
-
-(use-package ob-scheme
-  :defer t
-  :config
-  (define-advice org-babel-scheme-get-repl (:around (old-fun &rest args) dont-switch-buffer)
-    "Work-around for URL `https://github.com/jaor/geiser/issues/107'."
-    (cl-letf (((symbol-function 'geiser-repl--switch-to-buffer) #'set-buffer))
-      (apply old-fun args))))
-
-(use-package scheme
-  :defer t
-  :config (add-hook 'scheme-mode-hook #'paredit-mode))
-
-;; Dependency of `racket-mode'
-(use-package faceup
-  :ensure t
-  :defer t)
-
-(use-package racket-mode
-  :homepage https://github.com/greghendershott/racket-mode
-  ;; :ensure t
-  :load-path "~/src/racket-mode"
-  :defer t
-  :mode "\\.rkt\\'"
-  :init
-  ;; Might not be a very good idea, because '#lang basic' etc
-  (add-hook 'racket-mode-hook #'paredit-mode)
-  (defun chunyang-racket-mode-setup ()
-    ;; `racket-mode' enable this mode, not sure why
-    (and (bound-and-true-p hs-minor-mode)
-         (hs-minor-mode -1)))
-  (add-hook 'racket-mode-hook #'chunyang-racket-mode-setup)
-  (defun chunyang-racket-describe-mode-setup ()
-    (run-at-time
-     0
-     nil
-     (lambda ()
-       "Remove the last line."
-       (when-let ((buffer (get-buffer "*Racket Describe*")))
-         (with-current-buffer buffer
-           (save-excursion
-             (goto-char (point-max))
-             (goto-char (line-beginning-position))
-             (when (looking-at-p "^Definition")
-               (let ((inhibit-read-only t))
-                 (delete-region (line-beginning-position)
-                                (line-end-position))))))))))
-  (add-hook 'racket-describe-mode-hook #'chunyang-racket-describe-mode-setup)
-  :config
-  (define-advice racket-describe (:around (old-fun &rest args) silence)
-    "Silence `message', which is annoying."
-    (let ((message-log-max nil))
-      (apply old-fun args)
-      (message nil)))
-  ;; For `racket-shell-send-string-no-output'
-  (require 'racket-ext)
-  (defun chunyang-racket-eval-print-last-sexp ()
-    (interactive)
-    (let* ((end (point))
-           (beg (save-excursion
-                  (backward-sexp)
-                  (if (save-match-data (looking-at "#;"))
-                      (+ (point) 2)
-                    (point))))
-           (sexp (buffer-substring-no-properties beg end))
-           (str (replace-regexp-in-string (rx (* "\n") eos) "\n" sexp))
-           ;; XXX error?
-           (res (racket-shell-send-string-no-output str)))
-      (unless (bolp) (insert ?\n))
-      (cond ((string= res "")
-             ;; (message "No return value for this sexp")
-             )
-            ((string-match ".\n+." res) ; Multiline
-             (insert res))
-            (t
-             (insert ";; => " res "\n")))))
-
-  (bind-key "C-j" #'chunyang-racket-eval-print-last-sexp racket-mode-map)
-
-  (bind-key "C-h ." #'racket-describe racket-mode-map)
-  ;; This is annoying!
-  (advice-add 'racket--repl-show-and-move-to-end :override #'ignore))
-
-(use-package scribble-mode :about
-  https://docs.racket-lang.org/scribble/index.html :homepage
-  https://github.com/emacs-pe/scribble-mode :ensure t :defer t)
-
-;; NOTE: scribble.el and scribble-mode.el are two different package,
-;; though they are supposed to provide the same function, they can't
-;; be used at the same emacs session
-(use-package scribble
-  :disabled
-  :homepage http://www.neilvandyke.org/scribble-emacs/
-  :load-path "~/src/emacs-scribble"
-  :mode ("\\.scrbl\\'" . scribble-mode))
-
-
-;;; Web
-
-(use-package sgml-mode
-  :preface
-  (defun chunyang-html-mode-setup ()
-    ;; Add HTML Empty Elements.  XHTML requires /> but HTML doesn't
-    (add-to-list 'sgml-empty-tags "source"))
-  :hook (html-mode . chunyang-html-mode-setup))
-
-(use-package web-mode
-  :disabled t
-  :homepage http://web-mode.org
-  :ensure t
-  :defer t
-  :config
-  (setq web-mode-markup-indent-offset 2
-        web-mode-css-indent-offset    2
-        web-mode-code-indent-offset   2))
-
-(use-package emmet-mode
-  :disabled t
-  :homepage https://github.com/smihica/emmet-mode
-  :about Unfold CSS-selector-like expressions to markup
-  :ensure t
-  :defer t)
-
-(use-package expand-emmet
-  :load-path "~/.emacs.d/lisp/expand-emmet"
-  :commands expand-emmet-line)
-
-(use-package js
-  :defer t
-  :preface
-  (defun chunyang-nodejs-find-module (module)
-    (interactive
-     (list (read-string "Module: "
-                        ;; Use `syntax-ppss' or text props?
-                        (thing-at-point 'symbol))))
-    (let (filename)
-      (with-temp-buffer
-        (let ((exit (call-process "node" nil t nil "-pe" (format "require.resolve('%s')" module))))
-          (when (eq (char-before) ?\n)
-            (delete-char -1))
-          (if (zerop exit)
-              (setq filename (buffer-string))
-            (user-error "Can't find location of %s" module))))
-      (if (file-exists-p filename)
-          (find-file filename)
-        (user-error "Don't know how to open %s" filename))))
-  :config
-  (setq js-indent-level 2)
-  (setq js-switch-indent-offset 2)
-  (defun chunyang-js-mode-setup ()
-    (setq electric-layout-rules
-          (seq-remove (lambda (elt) (= (car elt) ?\;))
-                      electric-layout-rules)))
-  (add-hook 'js-mode-hook #'chunyang-js-mode-setup))
-
-(use-package js2-mode
-  :homepage https://github.com/mooz/js2-mode/
-  :ensure t
-  :hook ((js2-mode . js2-imenu-extras-mode)
-         (js2-mode . js2-mode-hide-warnings-and-errors))
-  :init
-  (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-  (add-to-list 'interpreter-mode-alist '("node" . js2-mode))
-  :config (setq js2-skip-preprocessor-directives t))
-
-(use-package nodejs-repl
-  :ensure t
-  :commands nodejs-repl-switch-to-repl)
-
-(use-package tern
-  :homepage http://ternjs.net/
-  :ensure t
-  :defer t
-  :config
-  ;; https://discuss.ternjs.net/t/emacs-get-the-full-function-docs-comments-with-c-c-c-d/50/3
-  (defun tern-describe ()
-    (interactive)
-    (tern-run-query
-     (lambda (data)
-       ;; url, doc, type, origin
-       (let-alist data
-         (with-current-buffer (get-buffer-create "*Tern Describe*")
-           (let ((inhibit-read-only t))
-             (erase-buffer)
-             (when .doc
-               (insert .doc)
-               (fill-region (point-min) (point-max)))
-             (when .url
-               (and .doc (insert "\n\n"))
-               (insert .url))
-             (goto-char (point-min))
-             (display-buffer (current-buffer))))))
-     '((type . "documentation") (docFormat . "full"))
-     (point)))
-  :hook (js2-mode . tern-mode))
-
-
-(use-package js2-refactor
-  :ensure t
-  :defer t)
-
-(use-package indium
-  :ensure t
-  :homepage https://github.com/NicolasPetton/indium
-  :about JavaScript Awesome Development Environment
-  :info (info "(Indium) Top")
-  :hook (js2-mode . indium-interaction-mode))
-
-(use-package tide
-  :disabled t
-  :homepage https://github.com/ananthakumaran/tide
-  :hook (js2-mode . tide-setup))
-
-(use-package skewer-mode
-  :about live browser JavaScript, CSS, and HTML interaction
-  :homepage https://github.com/skeeto/skewer-mode
-  :disabled t
-  :ensure t
-  :defer t
-  :init
-  (add-hook 'js2-mode-hook #'skewer-mode)
-  (add-hook 'css-mode-hook #'skewer-css-mode)
-  (add-hook 'html-mode-hook #'skewer-html-mode))
-
-(use-package css-mode
-  :defer t
-  :config (setq css-indent-offset 2))
-
-;; TODO Try this package (examples, documentation)
-(use-package web-server
-  :homepage https://github.com/eschulte/emacs-web-server
-  :ensure t
-  :preface
-  (defun simple-http-server (root-dir)
-    "简单的文件 HTTP 服务器，效果类似于 python -m http.server 8888."
-    (interactive (list (expand-file-name default-directory)))
-    (ws-start
-     `(lambda (request)
-        (with-slots ((proc process) headers) request
-          (let* ((path (alist-get :GET headers))
-                 (path (concat ,root-dir path)))
-            (cond ((file-directory-p path)
-                   (ws-response-header proc 200 (cons "Content-type" "text/html"))
-                   (process-send-string
-                    proc
-                    (mapconcat
-                     (lambda (f)
-                       (when (file-directory-p f)
-                         (setq f (concat f "/")))
-                       (format "<li><a href=%s>%s</li>"
-                               (url-encode-url f) (url-encode-url f)))
-                     (directory-files path)
-                     "\n")))
-                  ((file-regular-p path)
-                   (ws-send-file proc path))
-                  (t
-                   (ws-send-404 proc)))
-            )))
-     8888)
-    (browse-url "http://localhost:8888/"))
-  :defer t)
-
-
-;;; Elixir
-
-(use-package elixir-mode
-  :ensure t
-  :homepage https://github.com/elixir-lang/emacs-elixir
-  :defer t
-  :config
-  (require 'comint)
-  (define-derived-mode inferior-elixir-mode comint-mode "Inferior Elixir"
-    "Major mode for Elixir inferior process."
-    (setq comint-prompt-regexp (rx bol (or "iex" "...") "(" (1+ num) ") ")))
-
-  (defun run-elixir ()
-    (interactive)
-    (with-current-buffer (make-comint-in-buffer "Elixir" "*Elixir*" "iex" nil)
-      (inferior-elixir-mode)
-      (display-buffer (current-buffer)))))
-
-(use-package alchemist
-  :homepage https://github.com/tonini/alchemist.el
-  :ensure t
-  :defer t)
-
-
-;;; Clojure
-
-(use-package clojure-mode
-  :ensure t
-  :defer t
-  :config (add-hook 'clojure-mode-hook #'paredit-mode))
-
-(use-package cider
-  :homepage
-  https://github.com/clojure-emacs/cider
-  https://cider.readthedocs.io/en/latest
-  :ensure t
-  :defer t
-  :init
-  ;; Defaults to `slime' if `cider' is not already in `load-path'
-  (setq org-babel-clojure-backend 'cider)
-  :config
-  (add-hook 'cider-repl-mode-hook #'paredit-mode)
-  (add-hook 'cider-repl-mode-hook #'company-mode)
-
-  (bind-key "C-h ." #'cider-doc cider-mode-map)
-  (bind-key "C-h ." #'cider-doc cider-repl-mode-map)
-
-  (setq cider-repl-display-help-banner nil)
-  (setq cider-repl-display-in-current-window t)
-  (setq cider-repl-scroll-on-output nil)
-
-  (setq cider-prompt-for-symbol nil)
-
-  (define-advice cider-eldoc-format-function (:around (old-fun thing pos eldoc-info) docstring)
-    "Show docstring for function as well."
-    (concat
-     (funcall old-fun thing pos eldoc-info)
-     (when-let* ((doc (lax-plist-get eldoc-info "docstring"))
-                 (doc-one-line (substring doc 0 (string-match "\n" doc))))
-       (concat "  |  " (propertize doc-one-line 'face 'italic))))))
-
-
-;;; Python
-
-(use-package python
-  :defer t
-  :preface
-  (defun chunyang-python-mode-setup ()
-    (eldoc-mode -1)
-    (kill-local-variable 'completion-at-point-functions))
-
-  (defun chunyang-inferior-python-mode-setup ()
-    (setq-local comint-process-echoes t)
-    (kill-local-variable' completion-at-point-functions))
-  :config
-  (add-hook 'python-mode-hook #'chunyang-python-mode-setup)
-  (add-hook 'inferior-python-mode-hook #'chunyang-inferior-python-mode-setup)
-
-  (setq python-indent-guess-indent-offset nil)
-
-  (setq python-shell-interpreter "python3"
-        python-shell-completion-native-enable nil
-        python-shell-font-lock-enable nil))
-
-(use-package chunyang-python
-  :commands (chunyang-jedi
-             chunyang-python-comment-box))
-
-(use-package elpy
-  :disabled       ; too many dependencies (find-file-in-project ->
-                  ; ivy), and I don't write python for now.
-  :ensure t
-  :defer t
-  :init
-  (defun chunyang-elpy-enable ()
-    (elpy-enable)
-    (elpy-mode)
-    (remove-hook 'python-mode-hook #'chunyang-elpy-enable))
-  (add-hook 'python-mode-hook #'chunyang-elpy-enable)
-  :config
-  (setq elpy-modules '(elpy-module-sane-defaults
-                       elpy-module-company
-                       elpy-module-eldoc))
-  (bind-key "C-h ." #'elpy-doc elpy-mode-map)
-  (setq elpy-shell-use-project-root nil))
-
-(use-package pydoc
-  :ensure t
-  :commands pydoc
-  :config (setq pydoc-command "python3 -m pydoc"))
-
-(use-package helm-pydoc
-  :ensure t
-  :defer t)
-
-(use-package pipenv
-  :disabled
-  :ensure t
-  :defer t
-  :hook (python-mode . pipenv-mode))
-
-(use-package anaconda-mode
-  :disabled
-  :ensure t
-  :defer t
-  :hook ((python-mode . anaconda-mode)
-         (python-mode . anaconda-eldoc-mode)))
-
-(use-package company-anaconda
-  :disabled
-  :ensure t
-  :after company
-  :config
-  (add-to-list 'company-backends 'company-anaconda))
-
-
-;;; Lua
-
-(use-package lua-mode
-  :ensure t
-  :defer t)
-
-(use-package company-lua
-  :ensure t
-  :after lua-mode
-  :config
-  (add-to-list 'company-backends 'company-lua))
-
-
-;;; Janet <https://janet-lang.org/>
-
-(use-package janet
-  :commands run-janet)
-
-
-;;; Misc
-
-(use-package ascii-art-to-unicode
-  :ensure t
-  :defer t
-  :init
-  ;; `aa2u' is hard to recall
-  (defalias 'ascii-art-to-unicode 'aa2u))
-
-(use-package restart-emacs :ensure t :defer t)
-
-(use-package package-utils :ensure t :defer t)
-
-(use-package e2ansi                     ; Provide Syntax Highlight for shell by
-                                        ; Emacs.  This is very cool.
-  :ensure t
-  :load-path "~/src/e2ansi"
-  :defer t)
-
-
-;;; IM
-
-(use-package gitter
-  :ensure t
-  :defer t
-  :config
-  (setq gitter--debug t))
-
-
-;;; News
-
-(use-package hn
-  :commands list-hacker-news)
-
-
-;;; Programming Language
-(use-package language-detection
-  :ensure t
-  :defer t
-  :preface
-  (defun chunyang-language-detection-region (b e)
-    (interactive "r")
-    (message "Language: %s"
-             (language-detection-string (buffer-substring b e)))))
-
-
-;;; Emacs
-
-;; FIXME brew install emacs-mac
-(unless (and source-directory
-             (file-exists-p source-directory))
-  (setq source-directory "~/src/emacs"))
-
-(use-package elisp-bytecode
-  :homepage "https://github.com/rocky/elisp-bytecode"
-  :init (add-to-list 'Info-directory-list "~/src/elisp-bytecode")
-  :defer t)
-
-
-;;; Chinese | 中文
-
-(use-package mingju
-  :load-path "~/src/mingju"
-  :commands mingju)
-
-(use-package @300
-  :load-path "~/src/300"
-  :commands (@300 @300-random))
-
-(use-package chunyang-chinese
-  :commands (chunyang-chinese-insert-mark
-             chinese-punctuation-mode
-             chunyang-pinyin-occur))
-
-;; macOS 下，使用官方 GUI Emacs 和系统自带的拼音输入法时，输入期间，在
-;; Emacs buffer 已出现字母会随着输入的进行而发生抖动"，相关讨论：
-;; - https://emacs-china.org/t/mac-gui-emacs/186
-;; - https://debbugs.gnu.org/cgi/bugreport.cgi?bug=+23412
-
-;; 临时解决方法，有效但不清楚有没有副作用
-;; (setq redisplay-dont-pause nil)
-
-(use-package opencc
-  :ensure t
-  :defer t)
-
-(use-package scws
-  :if module-file-suffix
-  :about "SCWS 的 Emacs Module | 中文分词"
-  :load-path "~/src/emacs-scws"
-  :commands (scws scws-word-at-point))
-
-(use-package pinyin
-  :homepage https://github.com/xuchunyang/pinyin.el
-  :load-path "~/src/pinyin.el"
-  :commands pinyin)
-
-(use-package moedict
-  ;; Package-Requires: ((emacs "24.3") (helm "1.9.1") (esqlite "0.3.1"))
-  :ensure esqlite
-  :homepage https://github.com/kuanyui/moedict.el
-  :load-path "~/src/moedict.el"
-  :commands moedict)
-
-;; https://cc-cedict.org/editor/editor.php?handler=QueryDictionary
-(use-package cc-cedict
-  :load-path "~/src/cc-cedict.el"
-  :commands cc-cedict)
-
-
-;;; Fun
-
-(use-package svg-clock
-  :disabled t                           ; Disabled because it will install the
-                                        ; outdated svg-1.0.el from gnu elpa,
-                                        ; rather then use the newer (not
-                                        ; version) builtin one
-  :ensure t
-  :commands svg-clock)
-
-(use-package zone-nyan
-  :ensure t
-  :about "Walk a cat (using svg)"
-  :homepage https://github.com/wasamasa/zone-nyan
-  :commands zone-mode)
-
-;; My profile: https://codestats.net/users/xuchunyang
-(use-package code-stats
-  :disabled t
-  :homepage https://codestats.net/
-  :load-path "~/src/code-stats-emacs"
-  :diminish code-stats-mode
-  :config
-  ;; (setq code-stats-url "https://beta.codestats.net")
-  (add-hook 'prog-mode-hook #'code-stats-mode)
-  (run-with-idle-timer 30 t #'code-stats-sync)
-  (add-hook 'kill-emacs-hook (lambda () (code-stats-sync :wait))))
-
-(use-package fortune
-  :commands (fortune fortune-message)
-  :config
-  (cond (*is-mac*
-         ;; On macOS, fortune is installed via Homebrew
-         (setq fortune-dir  "/usr/local/share/games/fortunes/"
-               fortune-file "/usr/local/share/games/fortunes/fortunes"))
-        (*is-gnu-linux*
-         (setq fortune-dir  "/usr/share/games/fortunes/"
-               fortune-file "/usr/share/games/fortunes/fortunes"))))
-
-(use-package sl
-  :ensure t
-  :defer t)
-
-(use-package xpm
-  :homepage http://www.gnuvola.org/software/xpm/
-  :ensure t
-  :defer t)
-
-(use-package gnugo                      ; 围棋
-  :ensure t
-  :disabled t)
-
-(use-package chess                      ; 国际象棋
-  :ensure t
-  :disabled t)
-
-(use-package pacmacs
-  :disabled                      ; It defines `plist-map' without package prefix
-  :about "Pac-Man Game"
-  :homepage https://github.com/codingteam/pacmacs.el
-  :ensure t)
-
-(use-package spinner
-  :about "Add spinners and progress-bars to the mode-line for ongoing operations"
-  :ensure t
-  :defer t)
-
-;; `pulse.el' has the similiar function
-(use-package beacon
-  :about "Highlight the cursor whenever the window scrolls"
-  :ensure t
-  :defer t)
-
-(use-package xkcd
-  :ensure t
-  :defer t)
-
-(defun chunyang-birthday-p ()
-  "Return t if today is my birthday, i.e., 农历九月廿三."
-  ;; Adapted from `calendar-chinese-date-string'
-  (require 'cal-china)
-  (pcase-let ((`(_ _ ,m ,d) (calendar-chinese-from-absolute
-                             (calendar-absolute-from-gregorian
-                              (calendar-current-date)))))
-    ;; Note: For leap months M is a float.
-    (equal (list (floor m) d) '(9 23))))
-
-(defun chunyang-happy-birthday ()
-  ;; Avoid slowing down Emacs startup
-  (run-with-idle-timer
-   1
-   nil
-   (lambda ()
-     (when (chunyang-birthday-p)
-       (let ((cursor-type nil))
-         (animate-birthday-present user-full-name))))))
-
-(add-hook 'emacs-startup-hook #'chunyang-happy-birthday)
-
-(when (string= "03-23" (format-time-string "%m-%d"))
-  (run-with-idle-timer
-   1 nil
-   (lambda ()
-     (let (cursor-type)
-       (animate-birthday-present user-full-name)))))
-
-
-;;; Utilities
-
-(use-package popup
-  :about "Visual Popup Interface Library (using overlay)"
-  :homepage https://github.com/auto-complete/popup-el
-  :ensure t
-  :defer t)
-
-(use-package quick-peek
-  :about "Inline pop-up library (using overlay)"
-  :homepage https://github.com/cpitclaudel/quick-peek
-  :ensure t
-  :commands (quick-peek-show quick-peek-hide))
-
-(use-package pos-tip
-  :about "Like tooltip-show but can show at arbitrary position"
-  :homepage https://github.com/pitkali/pos-tip
-  :ensure t
-  :commands pos-tip-show)
-
-(use-package posframe
-  :if (version<= "26.1" emacs-version)
-  :about "Show a child frame at point"
-  :homepage https://github.com/tumashu/posframe
-  :ensure t
-  :defer t)
-
-(use-package cycle-quotes
-  :ensure t
-  :defer t)
-
-(use-package helm-unicode
-  :about 标点符号等输入
-  :ensure t
-  :defer t)
-
-(use-package restclient
-  :about "Test HTTP API"
-  :ensure t
-  :defer t)
-
-(use-package hexl
-  :about (info "(emacs) Editing Binary Files")
-  :notes
-      - od
-      - hexdump
-      - xxd
-      :commands (hexl-find-file hexl-mode))
-
-    (use-package nhexl-mode
-      :ensure t
-      :notes "Unlike `hexl-mode', this is a minor mode"
-      :defer t)
-
-    (use-package el2markdown
-      :about Convert Emacs Lisp Commentry section into Markdown
-      :ensure t
-      :defer t)
-
-    (use-package ip2region
-      :about "IP 地址定位"
-      :if module-file-suffix
-      :load-path "~/src/emacs-ip2region"
-      :commands ip2region)
-
-    (use-package cmark
-      :about "Markdown parser"
-      :if module-file-suffix
-      :load-path "~/src/emacs-cmark"
-      :commands cmark-markdown-to-html)
-
-    (use-package epkg
-      :about "Browse the Emacsmirror package database"
-      :info (info "(epkg) Top")
-      :notes M-x epkg-describe-package is very impressive
-      :preface
-      (autoload 'epkg-read-package "epkg")
-      (defun chunyang-use-package (package)
-        (interactive
-         (list
-          (epkg-read-package
-           "Insert use-pacakge form for package: ")))
-        (pp
-         `(use-package ,(intern package)
-            :homepage ,(oref (epkg package) homepage)
-            :summary ,(oref (epkg package) summary))
-         (current-buffer)))
-      :ensure t
-      :defer t)
-
-    (use-package esup
-      :about "the Emacs StartUp Profiler"
-      :ensure t
-      :defer t)
-
-    (use-package lsp-mode
-      :disabled t
-      :ensure t
-      :about "Minor mode for Language Server Protocol"
-      :homepage https://github.com/emacs-lsp/lsp-mode
-      :notes
-      - https://github.com/Microsoft/language-server-protocol/
-      - http://langserver.org/
-      :defer t
-      :config
-      ;; XXX The face `lsp-face-highlight-textual' (background yellow) is ugly
-      (setq lsp-highlight-symbol-at-point nil))
-
-    (use-package eglot
-      :about A client for Language Server Protocol servers
-      :homepage https://github.com/joaotavora/eglot
-      :ensure t
-      :commands eglot
-      :defer t
-      :config
-      ;; * Elixir
-      ;; https://elixirforum.com/t/emacs-elixir-setup-configuration-wiki/19196
-      (add-to-list
-       'eglot-server-programs
-       '(elixir-mode "~/src/elixir-ls/release/language_server.sh"))
-
-      (defun chunyang-elixir-current-project (dir)
-        "Return the current project as a cons cell usable by project.el."
-        (let ((project-dir (locate-dominating-file dir "mix.exs")))
-          (if project-dir
-              (cons 'elixir project-dir)
-            nil)))
-
-      (add-hook 'project-find-functions #'chunyang-elixir-current-project)
-
-      (cl-defmethod project-root ((project (head elixir)))
-        (list (cdr project))))
-
-    (use-package cquery
-      :disabled "Just give it a try"
-      :homepage https://github.com/jacobdufault/cquery
-      :load-path "~/src/cquery/emacs/"
-      :commands lsp-cquery-enable
-      :init
-      (add-hook 'c-mode-hook #'lsp-cquery-enable)
-      (add-hook 'c++-mode-hook #'lsp-cquery-enable)
-      (add-hook 'objc-mode-hook #'lsp-cquery-enable))
-
-    (use-package transmission
-      :ensure t
-      :defer t)
-
-    (use-package csv-mode
-      :about "Major mode for csv files"
-      :ensure t
-      :defer t
-      :hook (csv-mode . hl-line-mode))
-
-    (use-package po-mode
-      :disabled t                           ; Melpa stopped ship it
-      :about "Major mode for PO files"
-      :ensure t
-      :defer t)
-
-(use-package basic-mode
-  :ensure t
-  :defer t)
-
-(use-package cmake-mode
-  :ensure t
-  :defer t)
-
-(use-package gist
-  :disabled t                        ; 依赖 gh.el 的 autoload 加载太慢
-  :ensure t
-  :homepage https://github.com/defunkt/gist.el
-  :defer t)
-
-;; XXX Not working for multiple bytes ?
-;; [[https://github.com/magit/ghub/issues/12][Error: Multibyte text in HTTP request · Issue #12 · magit/ghub]]
-(use-package yagist
-  :ensure t
-  :load-path "~/src/yagist.el"
-  :commands (yagist-buffer yagist-buffer-private)
-  :homepage https://github.com/mhayashi1120/yagist.el
-  :defer t)
-
-
-;;; Other Emacs Lisp libraries
-
-;; dash, seq, thunk, stream, ewoc, cl-lib, widget, tree-widget, let-alist, map
-;; ring, radix-tree, dict-tree, trie, heap, avl-tree
-
-(use-package parsec
-  :about "A parser combinator library"
-  :ensure t
-  :defer t)
-
-(use-package hierarchy
-  :homepage https://github.com/DamienCassou/hierarchy
-  :about "Library to create and display hierarchy structures"
-  :ensure t
-  :defer t)
-
-(use-package ctable
-  :about "Library for creating tables"
-  :homepage https://github.com/kiwanami/emacs-ctable
-  :ensure t
-  :defer t)
-
-(use-package etable
-  :about "Library for creating tables."
-  :homepage https://github.com/Fuco1/ETable
-  :ensure t
-  :defer t)
-
-(use-package esxml
-  :homepage https://github.com/tali713/esxml
-  :about "XML writing and Document.querySelector()"
-  :ensure t
-  :defer t)
-
-(use-package xmlgen
-  :about "XML writing"
-  :notes "Unlike esxml, xmlgen uses its own sexp syntax and don't with work libxml-parse-html-region"
-  :ensure t
-  :defer t)
-
-(use-package chart                      ; Built-in
-  :defer t
-  :defer t)
-
-(use-package bui
-  :homepage https://github.com/alezost/bui.el
-  :ensure t
-  :defer t)
-
-(use-package trie
-  :info https://en.wikipedia.org/wiki/Trie
-  :ensure t
-  :defer t)
-
-(use-package strie
-  :homepage https://github.com/jcatw/strie.el
-  :ensure t
-  :defer t)
-
-(use-package request
-  :ensure t
-  :homepage https://github.com/tkf/emacs-request
-  :defer t)
-
-
-;;; Debugger
-
-(use-package gud
-  :info (info "(emacs) Debuggers")
-  :defer
-  :config
-  (setq gud-pdb-command-name "python -m pdb")
-  ;; `pdb'
-  (define-advice pdb (:after (&rest _) fix-gud-statement)
-    (gud-def gud-statement "!%e"      "\C-e" "Execute Python statement at point."))
-
-  (defhydra hydra-pdb (:hint nil :foreign-keys run)
-    "
-^Running^         ^Breakpoints^   ^Data^          ^Frame
-^^^^^^^^-----------------------------------------------------
-_n_: next         _b_: set        _p_: print exp  _u_: up
-_s_: step         _r_: remove     ^ ^             _d_: down
-_c_: continue
-_r_: return
-"
-    ;; Running
-    ("n" gud-next)
-    ("s" gud-step)
-    ("c" gud-cont)
-    ("r" gud-finish)
-    ("r" gud-finish)
-    ;; Breakpoints
-    ("b" gud-break)
-    ("r" gud-remove)
-    ;; Data
-    ("p" gud-print)
-    ("e" gud-statement)
-    ;; Frame
-    ("u" gud-up)
-    ("d" gud-down)
-    ;; Quit hydra
-    ("q" nil "quit" :color blue)))
-
-(use-package realgud
-  :disabled t                           ; Lots of byte compiling warnings
-  :homepage https://github.com/realgud/realgud
-  :ensure t
-  :defer t
-  :config
-  (setq realgud-safe-mode nil)
-  (setq realgud:pdb-command-name "python -m pdb"))
-
-
-;;; Custom
-
-;; All right, enough is enough, ALL themes are safe to me.
-(setq custom-safe-themes t)
-;; (load custom-file :no-error :no-message)
+    (org-map-entries
+      (lambda ()
+        (let ((org-archive-location "archive::* CANCEL"))
+            (org-archive-subtree))
+          (setq org-map-continue-from (outline-previous-heading));;跳到指定地方
+          )
+        "/CANCELED";;执行范围
+        'file;;执行范围
+        )
+      (org-map-entries
+        (lambda ()
+          (let ((org-archive-location "archive::* DOWN"))
+              (org-archive-subtree))
+            (setq org-map-continue-from (outline-previous-heading));;跳到指定地方
+            )
+          "/DONE";;执行范围
+          'file;;执行范围
+          )
+        )
+
+
+      (setq org-agenda-restore-windows-after-quit t)
+
+      (defun chunyang-org-capture ()
+        (interactive)
+        (let* ((input
+                 (completing-read
+                   "org capture template:"
+                   (mapcar
+                     (lambda (template)
+                       (format "%s %s" (car template) (cadr template)))
+                     org-capture-templates)))
+               (keys (car (split-string input))))
+          (org-capture nil keys)))
+
+      (add-hook 'org-agenda-mode-hook #'hl-line-mode)
+
+      ;; Support link to Manpage, EWW and Notmuch
+      (require 'org-man nil 'noerror)
+      ;;(require 'org-eww)
+      (require 'org-notmuch nil 'noerror)
+
+      (use-package ob-lisp                  ; Common Lisp
+                   :defer t
+                   :config
+                   ;; Requires SLY or SLIME, and the latter is used by default
+                   (setq org-babel-lisp-eval-fn 'sly-eval))
+
+      (use-package ob-ipython
+                   ;; XXX org-capture: Capture abort: (json-readtable-error 47)
+                   ;; 作者假设 jupyter 正常运行，不好
+                   :disabled
+                   :homepage https://github.com/gregsexton/ob-ipython
+                   :ensure t
+                   ;; :config
+                   ;; (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+                   :defer t)
+
+      ;;  (use-package ob-racket
+      ;;    :homepage https://github.com/DEADB17/ob-racket
+      ;;    :load-path "~/src/ob-racket"
+      ;;    :config
+      ;;    (add-to-list 'org-src-lang-modes (cons "racket" 'scheme)))
+
+      (add-to-list 'org-src-lang-modes '(("js" . js2)
+                                         ("plantuml" . plantuml)))
+
+      (org-babel-do-load-languages
+        'org-babel-load-languages
+        '((awk        . t)
+          (clojure    . t)
+          (C          . t)
+          (ditaa      . t)
+          (emacs-lisp . t)
+          (eshell     . t)
+          (latex      . t)
+          (lisp       . t)
+          (lua        . t)
+          (org        . t)
+          (perl       . t)
+          (python     . t)
+          (plantuml   . t)
+          (R          . t)
+          ;;     (racket     . t)
+          (ruby       . t)
+          (scheme     . t)
+          (shell      . t)))
+
+      ;; Work-around for
+      ;; http://lists.gnu.org/archive/html/emacs-orgmode/2018-03/msg00013.html
+      (define-advice org-babel-expand-body:clojure (:filter-return (body) do)
+                     (format "(do %s)" body))
+
+      ;; This is not safe
+      (setq org-confirm-babel-evaluate nil)
+
+      ;; Upcase #+begin_example...#+end_example in the results
+      (setq org-babel-uppercase-example-markers t)
+
+      ;; Highlight the result of source block
+      (add-hook 'org-babel-after-execute-hook
+                (defun chunyang-org-babel-highlight-result-maybe ()
+                  (when (eq this-command 'org-ctrl-c-ctrl-c)
+                    (chunyang-org-babel-highlight-result))))
+
+      (define-advice org-babel-eval-wipe-error-buffer (:override () kill-buffer)
+                     "Just kill the buffer since the buffer/window is useless and annoying."
+                     (when (get-buffer org-babel-error-buffer-name)
+                       (kill-buffer org-babel-error-buffer-name)))
+
+      ;; Or use C-c C-v C-x (`org-babel-do-key-sequence-in-edit-buffer') instead
+      (bind-key "C-h S" #'chunyang-org-info-lookup-symbol org-mode-map)
+
+      ;; [[https://emacs-china.org/t/topic/4540][rg搜索文字并跳转后如何自动展开上下文？ - Spacemacs - Emacs China]]
+      (add-hook 'next-error-hook
+                (defun chunyang-org-reveal-after-next-error ()
+                  (and (derived-mode-p 'org-mode) (org-reveal))))
+
+      ;; https://emacs-china.org/t/topic/5494
+      (setq org-protocol-protocol-alist
+            '(("bookmark"
+               :protocol "bookmark"
+               :function chunyang-org-protocol-capture-bookmark)))
+
+      (defun chunyang-org-protocol-capture-bookmark (_info)
+        (org-capture nil "b")
+        ;; Only needed for Mac Port's builtin protocol support
+        (when *is-mac-port*
+          (run-at-time 0 nil #'chunyang-mac-switch-back-to-previous-application))
+        nil)
+
+      (defun chunyang-mac-switch-back-to-previous-application ()
+        (interactive)
+        ;; http://blog.viktorkelemen.com/2011/07/switching-back-to-previous-application.html
+        (do-applescript
+          (mapconcat
+            #'identity
+            '("tell application \"System Events\""
+              "  tell process \"Finder\""
+              "    activate"
+              "    keystroke tab using {command down}"
+              "  end tell"
+              "end tell")
+            "\n")))
+
+      ;; $ emacsclient 'org-protocol://bookmark?'
+      (require 'org-protocol)
+      (require 'org-habit))
+
+    (use-package ox-html
+                 :defer t)
+
+    (use-package chunyang-org
+                 :commands (chunyang-org-agenda-csv
+                             helm-org-easy-templates
+                             chunyang-org-format-region-as-code-block
+                             chunyang-org-preview-via-pandoc
+                             chunyang-org-babel-tangle))
+
+    (use-package toc-org
+                 :homepage https://github.com/snosov1/toc-org
+                 :notes "Add TOC tag to a heading then 'M-x toc-org-insert-toc'"
+                 :ensure t
+                 :defer t)
+
+    (use-package grab-mac-link
+                 :if *is-mac*
+                 :load-path "~/src/grab-mac-link"
+                 :ensure t
+                 :commands (grab-mac-link grab-mac-link-dwim)
+                 :config (setq grab-mac-link-dwim-favourite-app 'chrome))
+
+    (use-package htmlize                    ; Enable src block syntax
+                 ; highlightting during
+                 ; exporting from org to html
+                 :ensure t
+                 :defer t)
+
+    (use-package orglink
+                 :disabled t
+                 :ensure t
+                 :preface
+                 ;; XXX To fix "funcall-interactively: Text is read-only" error, when
+                 ;; entering pattern after M-x el-search-pattern
+                 (defun chunyang-orglink-turn-on-maybe ()
+                   (unless (minibufferp)
+                     (orglink-mode)))
+                 :defer t
+                 :init (add-hook 'prog-mode-hook #'chunyang-orglink-turn-on-maybe)
+                 :config (setq orglink-mode-lighter nil))
+
+    ;; TODO: Learn more about this package
+    (use-package org-board                  ; Bookmark with Org
+                 :ensure t
+                 :defer t)
+
+    (use-package habitica
+                 :disabled t
+                 :ensure t
+                 :defer t)
+
+
+    ;;; C
+
+    ;; C Programming Tools:
+    ;; - GDB (info "(gdb) Top")
+    ;; - GCC (info "(gcc) Top")
+    ;; - CC Mode (info "(ccmode) Top")
+    ;;
+    ;; Note that it's not easy to use GDB on macOS (blame Apple).
+
+    (use-package cc-mode
+                 ;; Tips:
+                 ;; - C-M-a/e and M-a/e understands functions and statements, it's cool
+                 :defer t
+                 :init
+                 ;; Turn on Auto-newline and hungry-delete-key, they are adviced by cc-mode
+                 ;; manual, let me try them for a while. BTW, 'a' and 'h' will be indicated in
+                 ;; the mode-line, such as C/lah.  BTW, 'l' stands for electric keys, use C-c
+                 ;; C-l to toggle it.
+                 ;; (add-hook 'c-mode-common-hook #'c-toggle-auto-hungry-state)
+
+                 (defun chunyang-c-mode-common-setup ()
+                   (abbrev-mode -1))
+
+                 (add-hook 'c-mode-common-hook #'chunyang-c-mode-common-setup)
+
+                 (defun chunyang-cpp-lookup ()
+                   "Lookup C function/macro/etc prototype via Preprocessing."
+                   (interactive)
+                   (let ((symbol (current-word))
+                         (buffer "*clang-cpp-output*")
+                         (file buffer-file-name))
+                     (with-current-buffer (get-buffer-create buffer)
+                                          (erase-buffer)
+                                          (call-process "cc" nil t nil "-E" file)
+                                          (goto-char (point-min))
+                                          (re-search-forward symbol nil t)
+                                          (display-buffer (current-buffer)))))
+                 :config
+                 ;; Really need a key binding for reporting bug? M-x `c-submit-bug-report'
+                 (unbind-key "C-c C-b" c-mode-map)
+                 ;; C/*lah => C
+                 (advice-add 'c-update-modeline :around #'ignore)
+
+                 ;; Add imenu support for section comment like this
+                 ;; /*** includes ***/
+                 (add-to-list
+                   'cc-imenu-c-generic-expression
+                   (list "Section"
+                         (rx line-start "/***" (group (1+ not-newline)) "***/" line-end)
+                         1)))
+
+    (use-package irony
+                 :disabled t
+                 :ensure t
+                 :defer t
+                 :init
+                 (add-hook 'c-mode-hook #'irony-mode)
+
+                 ;; replace the `completion-at-point' and `complete-symbol' bindings in
+                 ;; irony-mode's buffers by irony-mode's function
+                 (defun my-irony-mode-hook ()
+                   (bind-key
+                     [remap completion-at-point]
+                     #'irony-completion-at-point-async
+                     irony-mode-map)
+                   (bind-key
+                     [remap complete-symbol]
+                     #'irony-completion-at-point-async
+                     irony-mode-map))
+                 (add-hook 'irony-mode-hook #'my-irony-mode-hook)
+                 (add-hook 'irony-mode-hook #'irony-cdb-autosetup-compile-options)
+
+                 :config
+                 (use-package company-irony
+                              :ensure t
+                              :defer t
+                              :init (with-eval-after-load 'company
+                                                          (add-to-list 'company-backends 'company-irony))
+                              :config
+                              ;; Prefer "fun ()" over "fun()"
+                              (define-advice company-irony--post-completion
+                                             (:override (candidate) put-space-open-parentheses-maybe)
+                                             "Add one space before open-parenthesis if using GNU style."
+                                             (when (and (equal c-indentation-style "gnu")
+                                                        candidate)
+                                               (let ((point-before-post-complete (point)))
+                                                 (if (irony-snippet-available-p)
+                                                   (irony-completion-post-complete candidate)
+                                                   (let ((str (irony-completion-post-comp-str candidate)))
+                                                     ;; Prefer GNU C style by adding one space after function
+                                                     ;; name (2016-10-24 by xcy)
+                                                     (unless (string-empty-p str)
+                                                       (insert " "))
+                                                     (insert str)
+                                                     (company-template-c-like-templatify str)))
+                                                 (unless (eq (point) point-before-post-complete)
+                                                   (setq this-command 'self-insert-command))))))
+
+                 (use-package irony-eldoc        ; Note: this does not work very well
+                              :ensure t
+                              :defer t
+                              :init (add-hook 'irony-mode-hook #'irony-eldoc)))
+
+    (use-package flycheck-irony
+                 :ensure t
+                 :after irony
+                 :config
+                 (eval-after-load 'flycheck
+                                  '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup)))
+
+
+    ;;; Rust
+
+    (use-package rust-mode
+                 :ensure t
+                 :defer t)
+
+    (use-package racer
+                 :ensure t
+                 :homepage https://github.com/racer-rust/emacs-racer
+                 :notes
+                 - $ cargo install racer
+                 :after rust-mode
+                 :config
+                 (add-hook 'rust-mode-hook #'racer-mode)
+                 (add-hook 'racer-mode-hook #'eldoc-mode))
+
+    (use-package flycheck-rust     ; The built-in check of Flycheck not working well
+                 :ensure t
+                 :defer t
+                 :after flycheck
+                 :config
+                 (add-hook 'flycheck-mode-hook #'flycheck-rust-setup))
+
+    (use-package ob-rust
+                 :homepage https://travis-ci.org/micanzhang/ob-rust
+                 :ensure t
+                 :after org)
+
+    (use-package toml-mode
+                 :ensure t
+                 :defer t)
+
+
+    ;;; Common Lisp
+
+    (use-package slime
+                 :disabled t
+                 :ensure t
+                 :defer t
+                 :init (setq inferior-lisp-program "sbcl"))
+
+    ;; TODO eldoc support (`sly-autodoc-mode') is not working
+    ;; TODO Is completion working? (best with Company support, usually it should work out of box)
+    (use-package sly
+                 :disabled t   ; Since I don't write Common Lisp and this package updates a lot
+                 :ensure t
+                 :defer t
+                 :preface
+                 (defun chunyang-sly-eval-print-last-sexp ()
+                   "Like `chunyang-eval-print-last-sexp' in Emacs Lisp.
+                   Note that `sly-eval-last-expression' with prefix argument
+                   provides similiar function."
+                   (interactive)
+                   (let ((string (sly-last-expression)))
+                     (sly-eval-async `(slynk:eval-and-grab-output ,string)
+                                     (lambda (result)
+                                       (cl-destructuring-bind (_output value) result
+                                                              (unless (chunyang-current-line-empty-p) (insert ?\n))
+                                                              ;; (insert "     ⇒ " value)
+                                                              (insert "     => " value)
+                                                              (unless (chunyang-current-line-empty-p) (insert ?\n)))))))
+
+                   (defun chunyang-sly-eval-print-last-sexp-in-comment ()
+                     (interactive)
+                     (let ((string (sly-last-expression)))
+                       (sly-eval-async `(slynk:eval-and-grab-output ,string)
+                                       (lambda (result)
+                                         (cl-destructuring-bind (_output value) result
+                                                                (comment-dwim nil)
+                                                                (insert (format " => %s" value)))))))
+                   :config
+                   (setq inferior-lisp-program "sbcl")
+                   (bind-key "C-j" #'chunyang-sly-eval-print-last-sexp sly-mode-map)
+                   (bind-key "C-j" #'chunyang-sly-eval-print-last-sexp-in-comment sly-mode-map))
+
+                 (use-package sly-mrepl
+                              :no-require t                      ; Silence byte-compiling warnning
+                              :defer t
+                              :config
+                              ;; Enable Paredit in REPL too
+                              (add-hook 'sly-mrepl-mode-hook #'paredit-mode))
+
+
+                 ;;; newLISP <http://www.newlisp.org/>
+
+                 (use-package newlisp-mode
+                              :ensure t
+                              :homepage https://github.com/kosh04/newlisp-mode
+                              :defer t)
+
+
+                 ;;; Ruby
+
+                 (use-package ruby-mode
+                              :defer t
+                              :init
+                              (add-hook 'ruby-mode-hook #'superword-mode))
+
+                 (use-package inf-ruby
+                              :ensure t
+                              ;; `package.el' does the setup via autoload
+                              :defer t)
+
+                 (use-package robe
+                              ;; NOTE: Some gems have to be installed before using, see
+                              ;;       https://github.com/dgutov/robe
+                              :ensure t
+                              :after ruby-mode
+                              :config
+                              (add-hook 'ruby-mode-hook #'robe-mode))
+
+                 (use-package ruby-tools
+                              :disabled t
+                              :ensure t
+                              :defer t
+                              :init (add-hook 'ruby-mode-hook #'ruby-tools-mode))
+
+
+                 ;;; Standard ML
+
+                 (use-package sml-mode
+                              :ensure t
+                              :defer t)
+
+                 (use-package sml-eldoc
+                              :disabled t                           ; Not working
+                              :commands sml-eldoc-turn-on
+                              :init (add-hook 'sml-mode-hook #'sml-eldoc-turn-on))
+
+                 (use-package ob-sml
+                              :ensure t
+                              :after org)
+
+
+                 ;;; Scheme
+
+                 (use-package geiser                     ; For Scheme
+                              :disabled
+                              :ensure t
+                              :defer t
+                              :defines geiser-mode-map
+                              :preface
+                              (defun chunyang-geiser-eval-print-last-sexp ()
+                                (interactive)
+                                (let ((message-log-max nil))
+                                  ;; FIXME: Handle error correctly like C-u M-x `geiser-eval-last-sexp'
+                                  (let ((res (geiser-eval-last-sexp nil)))
+                                    (unless (string= "=> " res)
+                                      (unless (bolp) (insert "\n"))
+                                      (insert
+                                        ";; "
+                                        ;; Handle Multiple Values
+                                        (replace-regexp-in-string "\n=>" "\n;; =>" res)
+                                        "\n")
+                                      (message nil)))))
+
+                              (defun chunyang-geiser-expand-sexp-at-point (&optional all)
+                                (interactive "P")
+                                (geiser-expand-region (point)
+                                                      (save-excursion (forward-sexp) (point))
+                                                      all
+                                                      t))
+
+                              ;; Important keys:
+                              ;; C-c C-z - Switch between source and REPL
+                              ;; C-z C-a - Switch to REPL with current module
+                              (defun chunyang-geiser-setup ()
+                                (bind-keys :map geiser-mode-map
+                                           ("C-h ."   . geiser-doc-symbol-at-point)
+                                           ("C-h C-." . geiser-doc-look-up-manual)
+                                           ("C-j"     . chunyang-geiser-eval-print-last-sexp)
+                                           ("C-c e"   . chunyang-geiser-expand-sexp-at-point)))
+                              :config
+                              ;; To learn how Geiser chooses Scheme implementation,
+                              ;; see (info "(geiser) The source and the REPL")
+                              ;; (setq geiser-active-implementations '(racket chicken))
+
+                              ;; XXX With scheme src block in Org, `scheme-mode' is called from time to
+                              ;; time, then `geiser-mode' is called, but it can't figure out the scheme
+                              ;; implementation.
+                              ;;
+                              ;; 1. In the Org mode, there is no need to enable `geiser-mode'.
+                              ;; 2. In C-c ' (`org-src-mode'), `geiser-mode' should be on and with correct
+                              ;;    scheme implementation.
+                              ;;
+                              ;; Ok, for now, just use the fallback.
+                              (setq geiser-default-implementation 'racket)
+
+                              (add-hook 'geiser-mode-hook #'chunyang-geiser-setup)
+
+                              ;; Yes, use ParEdit in the REPL too
+                              (add-hook 'geiser-repl-mode-hook #'paredit-mode)
+
+                              ;; (info "(geiser) Seeing is believing")
+                              (and *is-mac* (setq geiser-image-viewer "open")))
+
+                 (use-package ob-scheme
+                              :defer t
+                              :config
+                              (define-advice org-babel-scheme-get-repl (:around (old-fun &rest args) dont-switch-buffer)
+                                             "Work-around for URL `https://github.com/jaor/geiser/issues/107'."
+                                             (cl-letf (((symbol-function 'geiser-repl--switch-to-buffer) #'set-buffer))
+                                                      (apply old-fun args))))
+
+                 (use-package scheme
+                              :defer t
+                              :config (add-hook 'scheme-mode-hook #'paredit-mode))
+
+                 ;; Dependency of `racket-mode'
+                 (use-package faceup
+                              :ensure t
+                              :defer t)
+
+                 (use-package racket-mode
+                              :homepage https://github.com/greghendershott/racket-mode
+                              ;; :ensure t
+                              :load-path "~/src/racket-mode"
+                              :defer t
+                              :mode "\\.rkt\\'"
+                              :init
+                              ;; Might not be a very good idea, because '#lang basic' etc
+                              (add-hook 'racket-mode-hook #'paredit-mode)
+                              (defun chunyang-racket-mode-setup ()
+                                ;; `racket-mode' enable this mode, not sure why
+                                (and (bound-and-true-p hs-minor-mode)
+                                     (hs-minor-mode -1)))
+                              (add-hook 'racket-mode-hook #'chunyang-racket-mode-setup)
+                              (defun chunyang-racket-describe-mode-setup ()
+                                (run-at-time
+                                  0
+                                  nil
+                                  (lambda ()
+                                    "Remove the last line."
+                                    (when-let ((buffer (get-buffer "*Racket Describe*")))
+                                              (with-current-buffer buffer
+                                                                   (save-excursion
+                                                                     (goto-char (point-max))
+                                                                     (goto-char (line-beginning-position))
+                                                                     (when (looking-at-p "^Definition")
+                                                                       (let ((inhibit-read-only t))
+                                                                         (delete-region (line-beginning-position)
+                                                                                        (line-end-position))))))))))
+                              (add-hook 'racket-describe-mode-hook #'chunyang-racket-describe-mode-setup)
+                              :config
+                              (define-advice racket-describe (:around (old-fun &rest args) silence)
+                                             "Silence `message', which is annoying."
+                                             (let ((message-log-max nil))
+                                               (apply old-fun args)
+                                               (message nil)))
+                              ;; For `racket-shell-send-string-no-output'
+                              (require 'racket-ext)
+                              (defun chunyang-racket-eval-print-last-sexp ()
+                                (interactive)
+                                (let* ((end (point))
+                                       (beg (save-excursion
+                                              (backward-sexp)
+                                              (if (save-match-data (looking-at "#;"))
+                                                (+ (point) 2)
+                                                (point))))
+                                       (sexp (buffer-substring-no-properties beg end))
+                                       (str (replace-regexp-in-string (rx (* "\n") eos) "\n" sexp))
+                                       ;; XXX error?
+                                       (res (racket-shell-send-string-no-output str)))
+                                  (unless (bolp) (insert ?\n))
+                                  (cond ((string= res "")
+                                         ;; (message "No return value for this sexp")
+                                         )
+                                        ((string-match ".\n+." res) ; Multiline
+                                         (insert res))
+                                        (t
+                                          (insert ";; => " res "\n")))))
+
+                              (bind-key "C-j" #'chunyang-racket-eval-print-last-sexp racket-mode-map)
+
+                              (bind-key "C-h ." #'racket-describe racket-mode-map)
+                              ;; This is annoying!
+                              (advice-add 'racket--repl-show-and-move-to-end :override #'ignore))
+
+                 (use-package scribble-mode :about
+                              https://docs.racket-lang.org/scribble/index.html :homepage
+                              https://github.com/emacs-pe/scribble-mode :ensure t :defer t)
+
+                 ;; NOTE: scribble.el and scribble-mode.el are two different package,
+                 ;; though they are supposed to provide the same function, they can't
+                 ;; be used at the same emacs session
+                 (use-package scribble
+                              :disabled
+                              :homepage http://www.neilvandyke.org/scribble-emacs/
+                              :load-path "~/src/emacs-scribble"
+                              :mode ("\\.scrbl\\'" . scribble-mode))
+
+
+                 ;;; Web
+
+                 (use-package sgml-mode
+                              :preface
+                              (defun chunyang-html-mode-setup ()
+                                ;; Add HTML Empty Elements.  XHTML requires /> but HTML doesn't
+                                (add-to-list 'sgml-empty-tags "source"))
+                              :hook (html-mode . chunyang-html-mode-setup))
+
+                 (use-package web-mode
+                              :disabled t
+                              :homepage http://web-mode.org
+                              :ensure t
+                              :defer t
+                              :config
+                              (setq web-mode-markup-indent-offset 2
+                                    web-mode-css-indent-offset    2
+                                    web-mode-code-indent-offset   2))
+
+                 (use-package emmet-mode
+                              :disabled t
+                              :homepage https://github.com/smihica/emmet-mode
+                              :about Unfold CSS-selector-like expressions to markup
+                              :ensure t
+                              :defer t)
+
+                 (use-package expand-emmet
+                              :load-path "~/.emacs.d/lisp/expand-emmet"
+                              :commands expand-emmet-line)
+
+                 (use-package js
+                              :defer t
+                              :preface
+                              (defun chunyang-nodejs-find-module (module)
+                                (interactive
+                                  (list (read-string "Module: "
+                                                     ;; Use `syntax-ppss' or text props?
+                                                     (thing-at-point 'symbol))))
+                                (let (filename)
+                                  (with-temp-buffer
+                                    (let ((exit (call-process "node" nil t nil "-pe" (format "require.resolve('%s')" module))))
+                                      (when (eq (char-before) ?\n)
+                                        (delete-char -1))
+                                      (if (zerop exit)
+                                        (setq filename (buffer-string))
+                                        (user-error "Can't find location of %s" module))))
+                                  (if (file-exists-p filename)
+                                    (find-file filename)
+                                    (user-error "Don't know how to open %s" filename))))
+                              :config
+                              (setq js-indent-level 2)
+                              (setq js-switch-indent-offset 2)
+                              (defun chunyang-js-mode-setup ()
+                                (setq electric-layout-rules
+                                      (seq-remove (lambda (elt) (= (car elt) ?\;))
+                                                  electric-layout-rules)))
+                              (add-hook 'js-mode-hook #'chunyang-js-mode-setup))
+
+                 (use-package js2-mode
+                              :homepage https://github.com/mooz/js2-mode/
+                              :ensure t
+                              :hook ((js2-mode . js2-imenu-extras-mode)
+                                     (js2-mode . js2-mode-hide-warnings-and-errors))
+                              :init
+                              (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+                              (add-to-list 'interpreter-mode-alist '("node" . js2-mode))
+                              :config (setq js2-skip-preprocessor-directives t))
+
+                 (use-package nodejs-repl
+                              :ensure t
+                              :commands nodejs-repl-switch-to-repl)
+
+                 (use-package tern
+                              :homepage http://ternjs.net/
+                              :ensure t
+                              :defer t
+                              :config
+                              ;; https://discuss.ternjs.net/t/emacs-get-the-full-function-docs-comments-with-c-c-c-d/50/3
+                              (defun tern-describe ()
+                                (interactive)
+                                (tern-run-query
+                                  (lambda (data)
+                                    ;; url, doc, type, origin
+                                    (let-alist data
+                                               (with-current-buffer (get-buffer-create "*Tern Describe*")
+                                                                    (let ((inhibit-read-only t))
+                                                                      (erase-buffer)
+                                                                      (when .doc
+                                                                        (insert .doc)
+                                                                        (fill-region (point-min) (point-max)))
+                                                                      (when .url
+                                                                        (and .doc (insert "\n\n"))
+                                                                        (insert .url))
+                                                                      (goto-char (point-min))
+                                                                      (display-buffer (current-buffer))))))
+                                  '((type . "documentation") (docFormat . "full"))
+                                  (point)))
+                              :hook (js2-mode . tern-mode))
+
+
+                 (use-package js2-refactor
+                              :ensure t
+                              :defer t)
+
+                 (use-package indium
+                              :ensure t
+                              :homepage https://github.com/NicolasPetton/indium
+                              :about JavaScript Awesome Development Environment
+                              :info (info "(Indium) Top")
+                              :hook (js2-mode . indium-interaction-mode))
+
+                 (use-package tide
+                              :disabled t
+                              :homepage https://github.com/ananthakumaran/tide
+                              :hook (js2-mode . tide-setup))
+
+                 (use-package skewer-mode
+                              :about live browser JavaScript, CSS, and HTML interaction
+                              :homepage https://github.com/skeeto/skewer-mode
+                              :disabled t
+                              :ensure t
+                              :defer t
+                              :init
+                              (add-hook 'js2-mode-hook #'skewer-mode)
+                              (add-hook 'css-mode-hook #'skewer-css-mode)
+                              (add-hook 'html-mode-hook #'skewer-html-mode))
+
+                 (use-package css-mode
+                              :defer t
+                              :config (setq css-indent-offset 2))
+
+                 ;; TODO Try this package (examples, documentation)
+                 (use-package web-server
+                              :homepage https://github.com/eschulte/emacs-web-server
+                              :ensure t
+                              :preface
+                              (defun simple-http-server (root-dir)
+                                "简单的文件 HTTP 服务器，效果类似于 python -m http.server 8888."
+                                (interactive (list (expand-file-name default-directory)))
+                                (ws-start
+                                  `(lambda (request)
+                                     (with-slots ((proc process) headers) request
+                                       (let* ((path (alist-get :GET headers))
+                                              (path (concat ,root-dir path)))
+                                         (cond ((file-directory-p path)
+                                                (ws-response-header proc 200 (cons "Content-type" "text/html"))
+                                                (process-send-string
+                                                  proc
+                                                  (mapconcat
+                                                    (lambda (f)
+                                                      (when (file-directory-p f)
+                                                        (setq f (concat f "/")))
+                                                      (format "<li><a href=%s>%s</li>"
+                                                              (url-encode-url f) (url-encode-url f)))
+                                                    (directory-files path)
+                                                    "\n")))
+                                               ((file-regular-p path)
+                                                (ws-send-file proc path))
+                                               (t
+                                                 (ws-send-404 proc)))
+                                         )))
+                                  8888)
+                                (browse-url "http://localhost:8888/"))
+                              :defer t)
+
+
+                 ;;; Elixir
+
+                 (use-package elixir-mode
+                              :ensure t
+                              :homepage https://github.com/elixir-lang/emacs-elixir
+                              :defer t
+                              :config
+                              (require 'comint)
+                              (define-derived-mode inferior-elixir-mode comint-mode "Inferior Elixir"
+                                                   "Major mode for Elixir inferior process."
+                                                   (setq comint-prompt-regexp (rx bol (or "iex" "...") "(" (1+ num) ") ")))
+
+                              (defun run-elixir ()
+                                (interactive)
+                                (with-current-buffer (make-comint-in-buffer "Elixir" "*Elixir*" "iex" nil)
+                                                     (inferior-elixir-mode)
+                                                     (display-buffer (current-buffer)))))
+
+                 (use-package alchemist
+                              :homepage https://github.com/tonini/alchemist.el
+                              :ensure t
+                              :defer t)
+
+
+                 ;;; Clojure
+
+                 (use-package clojure-mode
+                              :ensure t
+                              :defer t
+                              :config (add-hook 'clojure-mode-hook #'paredit-mode))
+
+                 (use-package cider
+                              :homepage
+                              https://github.com/clojure-emacs/cider
+                              https://cider.readthedocs.io/en/latest
+                              :ensure t
+                              :defer t
+                              :init
+                              ;; Defaults to `slime' if `cider' is not already in `load-path'
+                              (setq org-babel-clojure-backend 'cider)
+                              :config
+                              (add-hook 'cider-repl-mode-hook #'paredit-mode)
+                              (add-hook 'cider-repl-mode-hook #'company-mode)
+
+                              (bind-key "C-h ." #'cider-doc cider-mode-map)
+                              (bind-key "C-h ." #'cider-doc cider-repl-mode-map)
+
+                              (setq cider-repl-display-help-banner nil)
+                              (setq cider-repl-display-in-current-window t)
+                              (setq cider-repl-scroll-on-output nil)
+
+                              (setq cider-prompt-for-symbol nil)
+
+                              (define-advice cider-eldoc-format-function (:around (old-fun thing pos eldoc-info) docstring)
+                                             "Show docstring for function as well."
+                                             (concat
+                                               (funcall old-fun thing pos eldoc-info)
+                                               (when-let* ((doc (lax-plist-get eldoc-info "docstring"))
+                                                           (doc-one-line (substring doc 0 (string-match "\n" doc))))
+                                                          (concat "  |  " (propertize doc-one-line 'face 'italic))))))
+
+
+                 ;;; Python
+
+                 (use-package python
+                              :defer t
+                              :preface
+                              (defun chunyang-python-mode-setup ()
+                                (eldoc-mode -1)
+                                (kill-local-variable 'completion-at-point-functions))
+
+                              (defun chunyang-inferior-python-mode-setup ()
+                                (setq-local comint-process-echoes t)
+                                (kill-local-variable' completion-at-point-functions))
+                              :config
+                              (add-hook 'python-mode-hook #'chunyang-python-mode-setup)
+                              (add-hook 'inferior-python-mode-hook #'chunyang-inferior-python-mode-setup)
+
+                              (setq python-indent-guess-indent-offset nil)
+
+                              (setq python-shell-interpreter "python3"
+                                    python-shell-completion-native-enable nil
+                                    python-shell-font-lock-enable nil))
+
+                 (use-package chunyang-python
+                              :commands (chunyang-jedi
+                                          chunyang-python-comment-box))
+
+                 (use-package elpy
+                              :disabled       ; too many dependencies (find-file-in-project ->
+                              ; ivy), and I don't write python for now.
+                              :ensure t
+                              :defer t
+                              :init
+                              (defun chunyang-elpy-enable ()
+                                (elpy-enable)
+                                (elpy-mode)
+                                (remove-hook 'python-mode-hook #'chunyang-elpy-enable))
+                              (add-hook 'python-mode-hook #'chunyang-elpy-enable)
+                              :config
+                              (setq elpy-modules '(elpy-module-sane-defaults
+                                                    elpy-module-company
+                                                    elpy-module-eldoc))
+                              (bind-key "C-h ." #'elpy-doc elpy-mode-map)
+                              (setq elpy-shell-use-project-root nil))
+
+                 (use-package pydoc
+                              :ensure t
+                              :commands pydoc
+                              :config (setq pydoc-command "python3 -m pydoc"))
+
+                 (use-package helm-pydoc
+                              :ensure t
+                              :defer t)
+
+                 (use-package pipenv
+                              :disabled
+                              :ensure t
+                              :defer t
+                              :hook (python-mode . pipenv-mode))
+
+                 (use-package anaconda-mode
+                              :disabled
+                              :ensure t
+                              :defer t
+                              :hook ((python-mode . anaconda-mode)
+                                     (python-mode . anaconda-eldoc-mode)))
+
+                 (use-package company-anaconda
+                              :disabled
+                              :ensure t
+                              :after company
+                              :config
+                              (add-to-list 'company-backends 'company-anaconda))
+
+
+                 ;;; Lua
+
+                 (use-package lua-mode
+                              :ensure t
+                              :defer t)
+
+                 (use-package company-lua
+                              :ensure t
+                              :after lua-mode
+                              :config
+                              (add-to-list 'company-backends 'company-lua))
+
+
+                 ;;; Janet <https://janet-lang.org/>
+
+                 (use-package janet
+                              :commands run-janet)
+
+
+                 ;;; Misc
+
+                 (use-package ascii-art-to-unicode
+                              :ensure t
+                              :defer t
+                              :init
+                              ;; `aa2u' is hard to recall
+                              (defalias 'ascii-art-to-unicode 'aa2u))
+
+                 (use-package restart-emacs :ensure t :defer t)
+
+                 (use-package package-utils :ensure t :defer t)
+
+                 (use-package e2ansi                     ; Provide Syntax Highlight for shell by
+                              ; Emacs.  This is very cool.
+                              :ensure t
+                              :load-path "~/src/e2ansi"
+                              :defer t)
+
+
+                 ;;; IM
+
+                 (use-package gitter
+                              :ensure t
+                              :defer t
+                              :config
+                              (setq gitter--debug t))
+
+
+                 ;;; News
+
+                 (use-package hn
+                              :commands list-hacker-news)
+
+                 ;;; Programming Language
+                 (use-package language-detection
+                              :ensure t
+                              :defer t
+                              :preface
+                              (defun chunyang-language-detection-region (b e)
+                                (interactive "r")
+                                (message "Language: %s"
+                                         (language-detection-string (buffer-substring b e)))))
+
+
+                 ;;; Emacs
+
+                 ;; FIXME brew install emacs-mac
+                 (unless (and source-directory
+                              (file-exists-p source-directory))
+                   (setq source-directory "~/src/emacs"))
+
+                 (use-package elisp-bytecode
+                              :homepage "https://github.com/rocky/elisp-bytecode"
+                              :init (add-to-list 'Info-directory-list "~/src/elisp-bytecode")
+                              :defer t)
+
+
+                 ;;; Chinese | 中文
+
+                 (use-package mingju
+                              :load-path "~/src/mingju"
+                              :commands mingju)
+
+                 (use-package @300
+                              :load-path "~/src/300"
+                              :commands (@300 @300-random))
+
+                 (use-package chunyang-chinese
+                              :commands (chunyang-chinese-insert-mark
+                                          chinese-punctuation-mode
+                                          chunyang-pinyin-occur))
+
+                 ;; macOS 下，使用官方 GUI Emacs 和系统自带的拼音输入法时，输入期间，在
+                 ;; Emacs buffer 已出现字母会随着输入的进行而发生抖动"，相关讨论：
+                 ;; - https://emacs-china.org/t/mac-gui-emacs/186
+                 ;; - https://debbugs.gnu.org/cgi/bugreport.cgi?bug=+23412
+
+                 ;; 临时解决方法，有效但不清楚有没有副作用
+                 ;; (setq redisplay-dont-pause nil)
+
+                 (use-package opencc
+                              :ensure t
+                              :defer t)
+
+                 (use-package scws
+                              :if module-file-suffix
+                              :about "SCWS 的 Emacs Module | 中文分词"
+                              :load-path "~/src/emacs-scws"
+                              :commands (scws scws-word-at-point))
+
+                 (use-package pinyin
+                              :homepage https://github.com/xuchunyang/pinyin.el
+                              :load-path "~/src/pinyin.el"
+                              :commands pinyin)
+
+                 (use-package moedict
+                              ;; Package-Requires: ((emacs "24.3") (helm "1.9.1") (esqlite "0.3.1"))
+                              :ensure esqlite
+                              :homepage https://github.com/kuanyui/moedict.el
+                              :load-path "~/src/moedict.el"
+                              :commands moedict)
+
+                 ;; https://cc-cedict.org/editor/editor.php?handler=QueryDictionary
+                 (use-package cc-cedict
+                              :load-path "~/src/cc-cedict.el"
+                              :commands cc-cedict)
+
+
+                 ;;; Fun
+
+                 (use-package svg-clock
+                              :disabled t                           ; Disabled because it will install the
+                              ; outdated svg-1.0.el from gnu elpa,
+                              ; rather then use the newer (not
+                              ; version) builtin one
+                              :ensure t
+                              :commands svg-clock)
+
+                 (use-package zone-nyan
+                              :ensure t
+                              :about "Walk a cat (using svg)"
+                              :homepage https://github.com/wasamasa/zone-nyan
+                              :commands zone-mode)
+
+                 ;; My profile: https://codestats.net/users/xuchunyang
+                 (use-package code-stats
+                              :disabled t
+                              :homepage https://codestats.net/
+                              :load-path "~/src/code-stats-emacs"
+                              :diminish code-stats-mode
+                              :config
+                              ;; (setq code-stats-url "https://beta.codestats.net")
+                              (add-hook 'prog-mode-hook #'code-stats-mode)
+                              (run-with-idle-timer 30 t #'code-stats-sync)
+                              (add-hook 'kill-emacs-hook (lambda () (code-stats-sync :wait))))
+
+                 (use-package fortune
+                              :commands (fortune fortune-message)
+                              :config
+                              (cond (*is-mac*
+                                      ;; On macOS, fortune is installed via Homebrew
+                                      (setq fortune-dir  "/usr/local/share/games/fortunes/"
+                                            fortune-file "/usr/local/share/games/fortunes/fortunes"))
+                                    (*is-gnu-linux*
+                                      (setq fortune-dir  "/usr/share/games/fortunes/"
+                                            fortune-file "/usr/share/games/fortunes/fortunes"))))
+
+                 (use-package sl
+                              :ensure t
+                              :defer t)
+
+                 (use-package xpm
+                              :homepage http://www.gnuvola.org/software/xpm/
+                              :ensure t
+                              :defer t)
+
+                 (use-package gnugo                      ; 围棋
+                              :ensure t
+                              :disabled t)
+
+                 (use-package chess                      ; 国际象棋
+                              :ensure t
+                              :disabled t)
+
+                 (use-package pacmacs
+                              :disabled                      ; It defines `plist-map' without package prefix
+                              :about "Pac-Man Game"
+                              :homepage https://github.com/codingteam/pacmacs.el
+                              :ensure t)
+
+                 (use-package spinner
+                              :about "Add spinners and progress-bars to the mode-line for ongoing operations"
+                              :ensure t
+                              :defer t)
+
+                 ;; `pulse.el' has the similiar function
+                 (use-package beacon
+                              :about "Highlight the cursor whenever the window scrolls"
+                              :ensure t
+                              :defer t)
+
+                 (use-package xkcd
+                              :ensure t
+                              :defer t)
+
+                 (defun chunyang-birthday-p ()
+                   "Return t if today is my birthday, i.e., 农历九月廿三."
+                   ;; Adapted from `calendar-chinese-date-string'
+                   (require 'cal-china)
+                   (pcase-let ((`(_ _ ,m ,d) (calendar-chinese-from-absolute
+                                               (calendar-absolute-from-gregorian
+                                                 (calendar-current-date)))))
+                              ;; Note: For leap months M is a float.
+                              (equal (list (floor m) d) '(9 23))))
+
+                 (defun chunyang-happy-birthday ()
+                   ;; Avoid slowing down Emacs startup
+                   (run-with-idle-timer
+                     1
+                     nil
+                     (lambda ()
+                       (when (chunyang-birthday-p)
+                         (let ((cursor-type nil))
+                           (animate-birthday-present user-full-name))))))
+
+                 (add-hook 'emacs-startup-hook #'chunyang-happy-birthday)
+
+                 (when (string= "03-23" (format-time-string "%m-%d"))
+                   (run-with-idle-timer
+                     1 nil
+                     (lambda ()
+                       (let (cursor-type)
+                         (animate-birthday-present user-full-name)))))
+
+
+                 ;;; Utilities
+
+                 (use-package popup
+                              :about "Visual Popup Interface Library (using overlay)"
+                              :homepage https://github.com/auto-complete/popup-el
+                              :ensure t
+                              :defer t)
+
+                 (use-package quick-peek
+                              :about "Inline pop-up library (using overlay)"
+                              :homepage https://github.com/cpitclaudel/quick-peek
+                              :ensure t
+                              :commands (quick-peek-show quick-peek-hide))
+
+                 (use-package pos-tip
+                              :about "Like tooltip-show but can show at arbitrary position"
+                              :homepage https://github.com/pitkali/pos-tip
+                              :ensure t
+                              :commands pos-tip-show)
+
+                 (use-package posframe
+                              :if (version<= "26.1" emacs-version)
+                              :about "Show a child frame at point"
+                              :homepage https://github.com/tumashu/posframe
+                              :ensure t
+                              :defer t)
+
+                 (use-package cycle-quotes
+                              :ensure t
+                              :defer t)
+
+                 (use-package helm-unicode
+                              :about 标点符号等输入
+                              :ensure t
+                              :defer t)
+
+                 (use-package restclient
+                              :about "Test HTTP API"
+                              :ensure t
+                              :defer t)
+
+                 (use-package hexl
+                              :about (info "(emacs) Editing Binary Files")
+                              :notes
+                              - od
+                              - hexdump
+                              - xxd
+                              :commands (hexl-find-file hexl-mode))
+
+                 (use-package nhexl-mode
+                              :ensure t
+                              :notes "Unlike `hexl-mode', this is a minor mode"
+                              :defer t)
+
+                 (use-package el2markdown
+                              :about Convert Emacs Lisp Commentry section into Markdown
+                              :ensure t
+                              :defer t)
+
+                 (use-package ip2region
+                              :about "IP 地址定位"
+                              :if module-file-suffix
+                              :load-path "~/src/emacs-ip2region"
+                              :commands ip2region)
+
+                 (use-package cmark
+                              :about "Markdown parser"
+                              :if module-file-suffix
+                              :load-path "~/src/emacs-cmark"
+                              :commands cmark-markdown-to-html)
+
+                 (use-package epkg
+                              :about "Browse the Emacsmirror package database"
+                              :info (info "(epkg) Top")
+                              :notes M-x epkg-describe-package is very impressive
+                              :preface
+                              (autoload 'epkg-read-package "epkg")
+                              (defun chunyang-use-package (package)
+                                (interactive
+                                  (list
+                                    (epkg-read-package
+                                      "Insert use-pacakge form for package: ")))
+                                (pp
+                                  `(use-package ,(intern package)
+                                                :homepage ,(oref (epkg package) homepage)
+                                                :summary ,(oref (epkg package) summary))
+                                  (current-buffer)))
+                              :ensure t
+                              :defer t)
+
+                 (use-package esup
+                              :about "the Emacs StartUp Profiler"
+                              :ensure t
+                              :defer t)
+
+                 (use-package lsp-mode
+                              :disabled t
+                              :ensure t
+                              :about "Minor mode for Language Server Protocol"
+                              :homepage https://github.com/emacs-lsp/lsp-mode
+                              :notes
+                              - https://github.com/Microsoft/language-server-protocol/
+                              - http://langserver.org/
+                              :defer t
+                              :config
+                              ;; XXX The face `lsp-face-highlight-textual' (background yellow) is ugly
+                              (setq lsp-highlight-symbol-at-point nil))
+
+                 (use-package eglot
+                              :about A client for Language Server Protocol servers
+                              :homepage https://github.com/joaotavora/eglot
+                              :ensure t
+                              :commands eglot
+                              :defer t
+                              :config
+                              ;; * Elixir
+                              ;; https://elixirforum.com/t/emacs-elixir-setup-configuration-wiki/19196
+                              (add-to-list
+                                'eglot-server-programs
+                                '(elixir-mode "~/src/elixir-ls/release/language_server.sh"))
+
+                              (defun chunyang-elixir-current-project (dir)
+                                "Return the current project as a cons cell usable by project.el."
+                                (let ((project-dir (locate-dominating-file dir "mix.exs")))
+                                  (if project-dir
+                                    (cons 'elixir project-dir)
+                                    nil)))
+
+                              (add-hook 'project-find-functions #'chunyang-elixir-current-project)
+
+                              (cl-defmethod project-root ((project (head elixir)))
+                                            (list (cdr project))))
+
+                 (use-package cquery
+                              :disabled "Just give it a try"
+                              :homepage https://github.com/jacobdufault/cquery
+                              :load-path "~/src/cquery/emacs/"
+                              :commands lsp-cquery-enable
+                              :init
+                              (add-hook 'c-mode-hook #'lsp-cquery-enable)
+                              (add-hook 'c++-mode-hook #'lsp-cquery-enable)
+                              (add-hook 'objc-mode-hook #'lsp-cquery-enable))
+
+                 (use-package transmission
+                              :ensure t
+                              :defer t)
+
+                 (use-package csv-mode
+                              :about "Major mode for csv files"
+                              :ensure t
+                              :defer t
+                              :hook (csv-mode . hl-line-mode))
+
+                 (use-package po-mode
+                              :disabled t                           ; Melpa stopped ship it
+                              :about "Major mode for PO files"
+                              :ensure t
+                              :defer t)
+
+                 (use-package basic-mode
+                              :ensure t
+                              :defer t)
+
+                 (use-package cmake-mode
+                              :ensure t
+                              :defer t)
+
+                 (use-package gist
+                              :disabled t                        ; 依赖 gh.el 的 autoload 加载太慢
+                              :ensure t
+                              :homepage https://github.com/defunkt/gist.el
+                              :defer t)
+
+                 ;; XXX Not working for multiple bytes ?
+                 ;; [[https://github.com/magit/ghub/issues/12][Error: Multibyte text in HTTP request · Issue #12 · magit/ghub]]
+                 (use-package yagist
+                              :ensure t
+                              :load-path "~/src/yagist.el"
+                              :commands (yagist-buffer yagist-buffer-private)
+                              :homepage https://github.com/mhayashi1120/yagist.el
+                              :defer t)
+
+
+                 ;;; Other Emacs Lisp libraries
+
+                 ;; dash, seq, thunk, stream, ewoc, cl-lib, widget, tree-widget, let-alist, map
+                 ;; ring, radix-tree, dict-tree, trie, heap, avl-tree
+
+                 (use-package parsec
+                              :about "A parser combinator library"
+                              :ensure t
+                              :defer t)
+
+                 (use-package hierarchy
+                              :homepage https://github.com/DamienCassou/hierarchy
+                              :about "Library to create and display hierarchy structures"
+                              :ensure t
+                              :defer t)
+
+                 (use-package ctable
+                              :about "Library for creating tables"
+                              :homepage https://github.com/kiwanami/emacs-ctable
+                              :ensure t
+                              :defer t)
+
+                 (use-package etable
+                              :about "Library for creating tables."
+                              :homepage https://github.com/Fuco1/ETable
+                              :ensure t
+                              :defer t)
+
+                 (use-package esxml
+                              :homepage https://github.com/tali713/esxml
+                              :about "XML writing and Document.querySelector()"
+                              :ensure t
+                              :defer t)
+
+                 (use-package xmlgen
+                              :about "XML writing"
+                              :notes "Unlike esxml, xmlgen uses its own sexp syntax and don't with work libxml-parse-html-region"
+                              :ensure t
+                              :defer t)
+
+                 (use-package chart                      ; Built-in
+                              :defer t
+                              :defer t)
+
+                 (use-package bui
+                              :homepage https://github.com/alezost/bui.el
+                              :ensure t
+                              :defer t)
+
+                 (use-package trie
+                              :info https://en.wikipedia.org/wiki/Trie
+                              :ensure t
+                              :defer t)
+
+                 (use-package strie
+                              :homepage https://github.com/jcatw/strie.el
+                              :ensure t
+                              :defer t)
+
+                 (use-package request
+                              :ensure t
+                              :homepage https://github.com/tkf/emacs-request
+                              :defer t)
+
+
+                 ;;; Debugger
+
+                 (use-package gud
+                              :info (info "(emacs) Debuggers")
+                              :defer
+                              :config
+                              (setq gud-pdb-command-name "python -m pdb")
+                              ;; `pdb'
+                              (define-advice pdb (:after (&rest _) fix-gud-statement)
+                                             (gud-def gud-statement "!%e"      "\C-e" "Execute Python statement at point."))
+
+                              (defhydra hydra-pdb (:hint nil :foreign-keys run)
+                                        "
+                                        ^Running^         ^Breakpoints^   ^Data^          ^Frame
+                                        ^^^^^^^^-----------------------------------------------------
+                                        _n_: next         _b_: set        _p_: print exp  _u_: up
+                                        _s_: step         _r_: remove     ^ ^             _d_: down
+                                        _c_: continue
+                                        _r_: return
+                                        "
+                                        ;; Running
+                                        ("n" gud-next)
+                                        ("s" gud-step)
+                                        ("c" gud-cont)
+                                        ("r" gud-finish)
+                                        ("r" gud-finish)
+                                        ;; Breakpoints
+                                        ("b" gud-break)
+                                        ("r" gud-remove)
+                                        ;; Data
+                                        ("p" gud-print)
+                                        ("e" gud-statement)
+                                        ;; Frame
+                                        ("u" gud-up)
+                                        ("d" gud-down)
+                                        ;; Quit hydra
+                                        ("q" nil "quit" :color blue)))
+
+                 (use-package realgud
+                              :disabled t                           ; Lots of byte compiling warnings
+                              :homepage https://github.com/realgud/realgud
+                              :ensure t
+                              :defer t
+                              :config
+                              (setq realgud-safe-mode nil)
+                              (setq realgud:pdb-command-name "python -m pdb"))
+
+
+                 ;;; Custom
+
+                 ;; All right, enough is enough, ALL themes are safe to me.
+                 (setq custom-safe-themes t)
+                 ;; (load custom-file :no-error :no-message)
 
 ;; add by fengshuu
 
@@ -5226,7 +5225,7 @@ _r_: return
   )
 ;; markdown preview
 (setq markdown-command "pandoc --metadata title=\"iiii\"")
-(setq markdown-css-paths '("/Users/fengshuhao/Dropbox/config/markdown.css"))
+(setq markdown-css-paths '("~/Dropbox/config/markdown.css"))
 
 (global-set-key (kbd "M-x") 'helm-M-x)
 
@@ -5527,6 +5526,14 @@ Version 2018-02-26"
 (setq inferior-lisp-program "/usr/local/Cellar/sbcl/1.5.7/bin/sbcl")
 
 (define-key org-mode-map (kbd "C-c C-y") 'yas-insert-snippet)
+
+;; setting up capture
+;;(setq org-default-notes-file (concat org-directory "/notes.org"))
+;;(put 'upcase-region 'disabled nil)
+;;(put 'downcase-region 'disabled nil)
+
+;; set variables
+;;(setq org-agenda-todo-list-sublevels t)
 
 ;; 自动去掉行尾的^M 为什么用不了呢?
 ;; (defun clean-line-suffix()    (replace-string C-q C-m))
