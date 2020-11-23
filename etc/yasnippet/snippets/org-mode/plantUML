@@ -2,6 +2,6 @@
 # name: plantUML
 # key: puml
 # --
-#+BEGIN_SRC plantuml :file ./${1:UML_PIC}.png :cmdline -charset utf-8
+#+BEGIN_SRC plantuml :file ~/Dropbox/plantuml/$1.png :cmdline -charset utf-8
 $0
 #+END_SRC
